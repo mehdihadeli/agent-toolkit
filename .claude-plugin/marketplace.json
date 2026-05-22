@@ -1,0 +1,64 @@
+{
+  "name": "skills-plugins-acps",
+  "owner": {
+    "name": "GitHub Copilot",
+    "email": "noreply@example.com"
+  },
+  "metadata": {
+    "description": "Local marketplace for plugins, skills, and ACP-related packages.",
+    "version": "1.0.0",
+    "author": "GitHub Copilot"
+  },
+  "plugins": [
+    {
+      "name": "obsidian-vault",
+      "source": "./obsidian-vault",
+      "version": "1.0.0",
+      "description": "Manage a software engineering Obsidian vault through the Obsidian Local REST API instead of direct filesystem scripts.",
+      "keywords": [
+        "obsidian",
+        "local-rest-api",
+        "knowledge-base",
+        "software-engineering",
+        "dotnet",
+        "ai",
+        "docker",
+        "kubernetes"
+      ],
+      "category": "productivity",
+      "tags": [
+        "obsidian",
+        "knowledge-base",
+        "work-journal",
+        "note-taking",
+        "documentation",
+        "automation"
+      ]
+    },
+    {
+      "name": "technical-article-assistant",
+      "source": "./technical-article-assistant",
+      "version": "1.0.0",
+      "description": "Plan and scaffold architect-grade technical articles for AI, .NET, software architecture, and DevOps with evidence packs, outlines, review gates, and publication-ready article workspaces.",
+      "keywords": [
+        "technical-writing",
+        "blog",
+        "ai",
+        "dotnet",
+        "software-architecture",
+        "devops",
+        "content-strategy",
+        "architecture"
+      ],
+      "category": "content-creation",
+      "tags": [
+        "technical-blogging",
+        "software-architecture",
+        "ai-engineering",
+        "dotnet",
+        "devops",
+        "longform-writing"
+      ]
+    }
+  ]
+}
