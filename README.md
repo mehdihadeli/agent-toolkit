@@ -17,7 +17,7 @@ skills-plugins-acps/
 
 ### obsidian-vault
 
-The [obsidian-vault](f:/skills-plugins-acps/obsidian-vault) package is a plugin for managing an Obsidian vault through Obsidian Local REST API.
+The [obsidian-vault](obsidian-vault/README.md) package is a plugin for managing an Obsidian vault through Obsidian Local REST API.
 
 The same package is installable in both Claude Code and GitHub Copilot CLI.
 
@@ -36,7 +36,7 @@ obsidian-vault/
 
 ### technical-article-assistant
 
-The [technical-article-assistant](f:/skills-plugins-acps/technical-article-assistant) package is a dual Claude Code and Copilot CLI plugin for planning and scaffolding advanced technical articles in AI, .NET, software architecture, and DevOps.
+The [technical-article-assistant](technical-article-assistant/README.md) package is a dual Claude Code and Copilot CLI plugin for planning and scaffolding advanced technical articles in AI, .NET, software architecture, and DevOps.
 
 It is designed for long-form articles written from the perspective of a software architect and AI engineer.
 
