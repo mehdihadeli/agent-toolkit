@@ -1,0 +1,194 @@
+{
+    // =============================================================================
+    // SHELL ENFORCEMENT (STRICT)
+    // Linux/macOS: /bin/bash only | Windows: Git Bash only
+    // =============================================================================
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.defaultProfile.osx": "bash",
+    "terminal.integrated.defaultProfile.windows": "Git Bash",
+    "terminal.integrated.automationProfile.windows": {
+        "path": "C:\\Program Files\\Git\\bin\\bash.exe",
+        "args": [
+            "--login",
+            "-i"
+        ]
+    },
+    "terminal.external.windowsExec": "C:\\Program Files\\Git\\bin\\bash.exe",
+    "terminal.integrated.profiles.windows": {
+        "Git Bash": {
+            "path": "C:\\Program Files\\Git\\bin\\bash.exe",
+            "args": [
+                "--login",
+                "-i"
+            ],
+            "icon": "terminal-bash"
+        }
+    },
+    // =============================================================================
+    // GITHUB COPILOT GLOBAL INSTRUCTIONS
+    // Applies to Chat, Code Generation, and Inline Suggestions
+    // =============================================================================
+    "github.copilot.advanced": {
+        "authProvider": "github"
+    },
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "github.copilot.chat.codeGeneration.instructions": [
+        "Act as a Principal Software Architect and AI Engineer.",
+        "ALWAYS use bash (Linux/macOS) or Git Bash (Windows). NEVER use PowerShell, CMD, or WSL.",
+        "Use PATCH with Target-Type: frontmatter for metadata updates. Never rewrite full files.",
+        "Use POST /search/simple/ for fuzzy search, POST /search/ with JsonLogic/DQL for structured queries.",
+        "Never edit Obsidian vault files via filesystem; always route through the REST API.",
+        "Provide production-grade code with robust error handling. Flag trade-offs immediately."
+    ],
+    "chat.instructionsFilesLocations": {
+        ".github/instructions": true,
+        ".github/copilot-instructions.md": true
+    },
+    "chat.mcp.gallery.enabled": true,
+    "chat.plugins.enabled": true,
+    "chat.plugins.marketplaces": [
+        "dotnet/skills"
+    ],
+    "chat.viewSessions.orientation": "stacked",
+    "chat.agent.sandbox.enabled": "on",
+    // =============================================================================
+    // EDITOR & WORKBENCH
+    // =============================================================================
+    "workbench.colorTheme": "Visual Studio Light",
+    "workbench.iconTheme": "material-icon-theme",
+    "workbench.list.smoothScrolling": true,
+    "workbench.editor.wrapTabs": true,
+    "workbench.editor.highlightModifiedTabs": true,
+    "workbench.editor.enablePreviewFromCodeNavigation": true,
+    "workbench.editor.enablePreviewFromQuickOpen": true,
+    "editor.minimap.enabled": false,
+    "editor.fontSize": 14,
+    "editor.lineHeight": 2,
+    "editor.fontFamily": "Consolas, 'Courier New'",
+    "editor.fontLigatures": true,
+    "editor.cursorSmoothCaretAnimation": "on",
+    "editor.smoothScrolling": true,
+    "editor.wordWrap": "on",
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.guides.bracketPairs": true,
+    "editor.dragAndDrop": false,
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "terminal.integrated.fontFamily": "MesloLGM Nerd Font, 'Monaspace Neon', monospace, Consolas",
+    // =============================================================================
+    // FILES & EXPLORER
+    // =============================================================================
+    "files.autoSave": "onFocusChange",
+    "files.defaultLanguage": "markdown",
+    "files.associations": {
+        "*.mdx": "markdown"
+    },
+    "explorer.confirmDelete": false,
+    "explorer.confirmDragAndDrop": false,
+    "explorer.autoReveal": true,
+    "explorer.experimental.fileNesting.enabled": true,
+    "search.exclude": {
+        "package-lock.json": true,
+        "yarn.lock": true
+    },
+    // =============================================================================
+    // GIT & SCM
+    // =============================================================================
+    "git.autofetch": true,
+    "git.openRepositoryInParentFolders": "never",
+    "scm.defaultViewMode": "tree",
+    // =============================================================================
+    // DIFF EDITOR
+    // =============================================================================
+    "diffEditor.ignoreTrimWhitespace": true,
+    "diffEditor.renderSideBySide": true,
+    "diffEditor.hideUnchangedRegions.enabled": true,
+    "diffEditor.experimental.showMoves": true,
+    // =============================================================================
+    // TYPESCRIPT / JAVASCRIPT
+    // =============================================================================
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    "typescript.inlayHints.parameterNames.enabled": "all",
+    "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
+    "javascript.inlayHints.parameterNames.enabled": "all",
+    // =============================================================================
+    // ESLINT (Angular + HTML Templates)
+    // Ref: angular-eslint/angular-eslint
+    // =============================================================================
+    "eslint.options": {
+        "extensions": [
+            ".ts",
+            ".html"
+        ]
+    },
+    "eslint.validate": [
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact",
+        "html"
+    ],
+    // =============================================================================
+    // GO
+    // =============================================================================
+    "go.buildTags": "",
+    "go.toolsEnvVars": {
+        "CGO_ENABLED": "0"
+    },
+    "go.testEnvVars": {
+        "CGO_ENABLED": "1"
+    },
+    "go.testTimeout": "10s",
+    "go.coverOnSingleTest": true,
+    "go.coverOnSingleTestFile": true,
+    "go.coverOnTestPackage": true,
+    "go.lintTool": "golangci-lint",
+    "go.lintFlags": [
+        "--fast"
+    ],
+    "go.lintOnSave": "package",
+    "go.testFlags": [
+        "-failfast",
+        "-v"
+    ],
+    "go.toolsManagement.autoUpdate": true,
+    "go.useLanguageServer": true,
+    "go.formatTool": "gofumpt",
+    "gopls": {
+        "usePlaceholders": false,
+        "staticcheck": true
+    },
+    "[go]": {
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "always"
+        }
+    },
+    // =============================================================================
+    // C# / .NET
+    // =============================================================================
+    "dotnet.server.startTimeout": 60000,
+    "omnisharp.projectLoadTimeout": 60,
+    "csharpier.enableDebugLogs": true,
+    "[csharp]": {
+        "editor.defaultFormatter": "csharpier.csharpier-vscode",
+        "editor.formatOnSave": true
+    },
+    // =============================================================================
+    // OTHER LANGUAGE FORMATTERS
+    // =============================================================================
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[xml]": {
+        "editor.defaultFormatter": "Oracle.oracle-java"
+    },
+    // =============================================================================
+    // MISC
+    // =============================================================================
+    "resmon.show.cpufreq": false,
+    "makefile.configureOnOpen": false,
+    "jdk.telemetry.enabled": false,
+    "vsicons.dontShowNewVersionMessage": true,
+    "hediet.vscode-drawio.plugins": []
+}

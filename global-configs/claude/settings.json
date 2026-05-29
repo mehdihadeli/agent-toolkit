@@ -1,0 +1,21 @@
+{
+    "env": {
+        "SHELL": "/bin/bash"
+    },
+    "permissions": {
+        "allow": [
+            "Bash(node *)",
+            "Bash(npm *)",
+            "Bash(git *)",
+            "Bash(curl -k *)",
+            "Bash(jq *)",
+            "Bash(./setup-globals.sh)"
+        ],
+        "deny": [
+            "Bash(powershell *)",
+            "Bash(cmd *)",
+            "Bash(rm -rf /)",
+            "Bash(curl *http://127.0.0.1:27124*)"
+        ]
+    }
+}
