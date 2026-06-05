@@ -1,0 +1,35 @@
+{
+	"mcpServers": {
+		"obsidian": {
+			"type": "http",
+			"url": "https://127.0.0.1:27124/mcp/",
+			"headers": {
+				"Authorization": "Bearer c318fc298d6ff59ba54d4ed6d2e68e3fc6458f1f7d190f1813bdf1d5ed723db7"
+			}
+		},
+		"io.github.upstash/context7": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"@upstash/context7-mcp@1.0.31"
+			],
+			"env": {
+				"CONTEXT7_API_KEY": "${input:CONTEXT7_API_KEY}"
+			},
+			"gallery": "https://api.mcp.github.com",
+			"version": "1.0.31"
+		},
+		"microsoft.docs.mcp": {
+			"url": "https://learn.microsoft.com/api/mcp",
+			"type": "http"
+		}
+	},
+	"inputs": [
+		{
+			"id": "CONTEXT7_API_KEY",
+			"type": "promptString",
+			"description": "API key for authentication",
+			"password": true
+		}
+	]
+}

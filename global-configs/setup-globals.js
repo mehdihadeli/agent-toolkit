@@ -13,19 +13,27 @@ const TARGETS = [
     name: "Claude Code",
     sourceDir: path.join(SCRIPT_DIR, "claude"),
     targetDir: path.join(HOME, ".claude"),
-    files: ["CLAUDE.md", "settings.json"],
+    files: [
+      { source: "CLAUDE.md" },
+      { source: "settings.json" },
+      { source: ".claude.json", targetDir: HOME },
+    ],
   },
   {
     name: "Copilot CLI",
     sourceDir: path.join(SCRIPT_DIR, "copilot-cli"),
     targetDir: path.join(HOME, ".copilot"),
-    files: ["copilot-instructions.md", "config.json"],
+    files: [
+      { source: "copilot-instructions.md" },
+      { source: "config.json" },
+      { source: "mcp-config.json" },
+    ],
   },
   {
     name: "Repomix",
     sourceDir: path.join(SCRIPT_DIR, "repomix"),
     targetDir: path.join(HOME, ".repomix"),
-    files: ["repomix.config.ts"],
+    files: [{ source: "repomix.config.ts" }],
   },
 ];
 
@@ -42,23 +50,69 @@ function linkOrCopy(source, target) {
   }
 }
 
-function mergeVscodeSettings() {
-  const sourcePath = path.join(SCRIPT_DIR, "vscode-copilot", "settings.json");
-
-  let vscodeSettingsPath;
+function getVscodeUserDir() {
   if (IS_WINDOWS) {
     const appData = process.env.APPDATA;
     if (!appData) throw new Error("APPDATA environment variable not found.");
-    vscodeSettingsPath = path.join(appData, "Code", "User", "settings.json");
-  } else {
-    vscodeSettingsPath = path.join(
-      HOME,
-      ".config",
-      "Code",
-      "User",
-      "settings.json",
-    );
+    return path.join(appData, "Code", "User");
   }
+
+  return path.join(HOME, ".config", "Code", "User");
+}
+
+function mergeUniqueItemsById(existing = [], incoming = []) {
+  const merged = new Map();
+
+  for (const item of existing) {
+    if (item && typeof item === "object" && "id" in item) {
+      merged.set(item.id, item);
+    }
+  }
+
+  for (const item of incoming) {
+    if (item && typeof item === "object" && "id" in item) {
+      merged.set(item.id, item);
+    }
+  }
+
+  return [...merged.values()];
+}
+
+function mergeJsonConfig(
+  targetPath,
+  sourcePath,
+  objectKeys = [],
+  arrayKeys = [],
+) {
+  const existing = fs.existsSync(targetPath)
+    ? JSON.parse(fs.readFileSync(targetPath, "utf8"))
+    : {};
+  const incoming = JSON.parse(fs.readFileSync(sourcePath, "utf8"));
+  const merged = { ...existing, ...incoming };
+
+  for (const key of objectKeys) {
+    if (existing[key] || incoming[key]) {
+      merged[key] = {
+        ...(existing[key] ?? {}),
+        ...(incoming[key] ?? {}),
+      };
+    }
+  }
+
+  for (const key of arrayKeys) {
+    if (Array.isArray(existing[key]) || Array.isArray(incoming[key])) {
+      merged[key] = mergeUniqueItemsById(existing[key], incoming[key]);
+    }
+  }
+
+  fs.writeFileSync(targetPath, JSON.stringify(merged, null, 2) + "\n", "utf8");
+}
+
+function mergeVscodeSettings() {
+  const sourcePath = path.join(SCRIPT_DIR, "vscode-copilot", "settings.json");
+
+  const vscodeUserDir = getVscodeUserDir();
+  const vscodeSettingsPath = path.join(vscodeUserDir, "settings.json");
 
   if (!fs.existsSync(vscodeSettingsPath)) {
     console.log(`  ⚠ VS Code settings not found at ${vscodeSettingsPath}`);
@@ -86,6 +140,21 @@ function mergeVscodeSettings() {
   }
 }
 
+function mergeVscodeMcpConfig() {
+  const sourcePath = path.join(SCRIPT_DIR, "vscode-copilot", "mcp.json");
+  const vscodeUserDir = getVscodeUserDir();
+  const targetPath = path.join(vscodeUserDir, "mcp.json");
+
+  fs.mkdirSync(vscodeUserDir, { recursive: true });
+
+  try {
+    mergeJsonConfig(targetPath, sourcePath, ["servers"], ["inputs"]);
+    console.log("  ✓ Merged VS Code MCP config");
+  } catch (error) {
+    console.error(`  ✗ Failed to merge VS Code MCP config: ${error.message}`);
+  }
+}
+
 function main() {
   console.log("🔧 Deploying Global AI Configurations...\n");
 
@@ -94,19 +163,25 @@ function main() {
     fs.mkdirSync(target.targetDir, { recursive: true });
 
     for (const file of target.files) {
-      const sourceFile = path.join(target.sourceDir, file);
-      const targetFile = path.join(target.targetDir, file);
+      const sourceFile = path.join(target.sourceDir, file.source);
+      const targetFile = path.join(
+        file.targetDir ?? target.targetDir,
+        file.targetName ?? file.source,
+      );
 
       if (!fs.existsSync(sourceFile)) {
         console.warn(`  ⚠ Source file missing: ${sourceFile}`);
         continue;
       }
+
+      fs.mkdirSync(path.dirname(targetFile), { recursive: true });
       linkOrCopy(sourceFile, targetFile);
     }
   }
 
   console.log("\nVS Code Copilot:");
   mergeVscodeSettings();
+  mergeVscodeMcpConfig();
 
   console.log("\n✅ Done. Restart your AI tools to apply changes.");
 }
