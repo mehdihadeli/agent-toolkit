@@ -3,10 +3,20 @@
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { spawnSync } = require("node:child_process");
 
 const SCRIPT_DIR = __dirname;
 const HOME = os.homedir();
 const IS_WINDOWS = os.platform() === "win32";
+const CURATED_SKILL_AGENTS = ["claude-code", "github-copilot"];
+const SKILLS_AGENT_DISPLAY_NAMES = {
+  "claude-code": "Claude Code",
+  "github-copilot": "GitHub Copilot",
+};
+const CURATED_SKILLS = [
+  "https://github.com/blader/humanizer",
+  "eraserlabs/eraser-io",
+];
 
 const TARGETS = [
   {
@@ -38,14 +48,29 @@ const TARGETS = [
 ];
 
 function linkOrCopy(source, target) {
+  const sourceStats = fs.lstatSync(source);
+  const isDirectory = sourceStats.isDirectory();
+
   try {
     if (fs.existsSync(target)) {
-      fs.unlinkSync(target);
+      fs.rmSync(target, { recursive: true, force: true });
     }
-    fs.symlinkSync(source, target, "file");
+
+    const symlinkType = isDirectory
+      ? IS_WINDOWS
+        ? "junction"
+        : "dir"
+      : "file";
+
+    fs.symlinkSync(source, target, symlinkType);
     console.log(`  ✓ Linked: ${target}`);
   } catch (error) {
-    fs.copyFileSync(source, target);
+    if (isDirectory) {
+      fs.cpSync(source, target, { recursive: true });
+    } else {
+      fs.copyFileSync(source, target);
+    }
+
     console.log(`  ✓ Copied: ${target}`);
   }
 }
@@ -155,33 +180,147 @@ function mergeVscodeMcpConfig() {
   }
 }
 
-function main() {
-  console.log("🔧 Deploying Global AI Configurations...\n");
+function installCuratedSkills(dependencies = {}) {
+  const runSpawnSync = dependencies.spawnSync ?? spawnSync;
+  const log = dependencies.log ?? console.log;
+  const agentArgs = CURATED_SKILL_AGENTS.flatMap((agent) => ["-a", agent]);
 
-  for (const target of TARGETS) {
-    console.log(`${target.name}:`);
-    fs.mkdirSync(target.targetDir, { recursive: true });
+  for (const skill of CURATED_SKILLS) {
+    log(`Installing skill: ${skill}`);
 
-    for (const file of target.files) {
-      const sourceFile = path.join(target.sourceDir, file.source);
-      const targetFile = path.join(
-        file.targetDir ?? target.targetDir,
-        file.targetName ?? file.source,
+    const result = runSpawnSync(
+      "npx",
+      ["skills", "add", skill, "-g", ...agentArgs, "-y"],
+      {
+        stdio: "inherit",
+        cwd: path.dirname(SCRIPT_DIR),
+      },
+    );
+
+    if (result.status !== 0) {
+      throw new Error(
+        `Skill installation failed for ${skill} with exit code ${result.status}.`,
       );
-
-      if (!fs.existsSync(sourceFile)) {
-        console.warn(`  ⚠ Source file missing: ${sourceFile}`);
-        continue;
-      }
-
-      fs.mkdirSync(path.dirname(targetFile), { recursive: true });
-      linkOrCopy(sourceFile, targetFile);
     }
   }
 
-  console.log("\nVS Code Copilot:");
-  mergeVscodeSettings();
-  mergeVscodeMcpConfig();
+  log();
+  log(`Installed curated skills for: ${CURATED_SKILL_AGENTS.join(", ")}`);
+  log(
+    "Note: Eraser also offers an MCP server for richer integrations when your agent supports MCP.",
+  );
+}
+
+function listInstalledSkills(dependencies = {}) {
+  const runSpawnSync = dependencies.spawnSync ?? spawnSync;
+
+  const result = runSpawnSync("npx", ["skills", "list", "-g", "--json"], {
+    cwd: path.dirname(SCRIPT_DIR),
+    encoding: "utf8",
+  });
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  if (result.status !== 0) {
+    throw new Error(
+      `Unable to list installed skills. Command exited with code ${result.status}.`,
+    );
+  }
+
+  return JSON.parse(result.stdout || "[]");
+}
+
+function isSkillInstalledForAgents(installedSkills, skillName, agentIds) {
+  const installedSkill = installedSkills.find(
+    (skill) => skill.name === skillName,
+  );
+  if (!installedSkill) {
+    return false;
+  }
+
+  const expectedAgents = agentIds.map(
+    (agentId) => SKILLS_AGENT_DISPLAY_NAMES[agentId] ?? agentId,
+  );
+
+  return expectedAgents.every(
+    (agentName) =>
+      Array.isArray(installedSkill.agents) &&
+      installedSkill.agents.includes(agentName),
+  );
+}
+
+function parseArgs(args) {
+  const options = {
+    skipSkills: false,
+    skillsOnly: false,
+  };
+
+  for (const arg of args) {
+    if (arg === "--skip-skills") {
+      options.skipSkills = true;
+      continue;
+    }
+
+    if (arg === "--skills-only") {
+      options.skillsOnly = true;
+      continue;
+    }
+
+    if (arg === "-h" || arg === "--help") {
+      console.log(
+        `Usage: node ./global-configs/setup-globals.js [options]\n\nOptions:\n  --skills-only  Install curated skills without reapplying global configs\n  --skip-skills  Apply global configs without installing curated skills\n  -h, --help     Show this help message`,
+      );
+      process.exit(0);
+    }
+
+    throw new Error(`Unknown option: ${arg}`);
+  }
+
+  if (options.skipSkills && options.skillsOnly) {
+    throw new Error("--skills-only and --skip-skills cannot be used together.");
+  }
+
+  return options;
+}
+
+function main() {
+  const options = parseArgs(process.argv.slice(2));
+
+  console.log("🔧 Deploying Global AI Configurations...\n");
+
+  if (!options.skillsOnly) {
+    for (const target of TARGETS) {
+      console.log(`${target.name}:`);
+      fs.mkdirSync(target.targetDir, { recursive: true });
+
+      for (const file of target.files) {
+        const sourceFile = path.join(target.sourceDir, file.source);
+        const targetFile = path.join(
+          file.targetDir ?? target.targetDir,
+          file.targetName ?? file.source,
+        );
+
+        if (!fs.existsSync(sourceFile)) {
+          console.warn(`  ⚠ Source file missing: ${sourceFile}`);
+          continue;
+        }
+
+        fs.mkdirSync(path.dirname(targetFile), { recursive: true });
+        linkOrCopy(sourceFile, targetFile);
+      }
+    }
+
+    console.log("\nVS Code Copilot:");
+    mergeVscodeSettings();
+    mergeVscodeMcpConfig();
+  }
+
+  if (!options.skipSkills) {
+    console.log("\nCurated Skills:");
+    installCuratedSkills();
+  }
 
   console.log("\n✅ Done. Restart your AI tools to apply changes.");
 }
@@ -196,7 +335,15 @@ if (require.main === module) {
 }
 
 module.exports = {
+  CURATED_SKILL_AGENTS,
+  CURATED_SKILLS,
+  getVscodeUserDir,
+  installCuratedSkills,
+  isSkillInstalledForAgents,
   linkOrCopy,
+  listInstalledSkills,
+  parseArgs,
+  SKILLS_AGENT_DISPLAY_NAMES,
   mergeVscodeSettings,
   TARGETS,
 };

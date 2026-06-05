@@ -113,6 +113,62 @@ This repository also includes a workspace agent under `.github/`:
 
 Open the workspace in VS Code with GitHub Copilot enabled and select the `Obsidian Vault` agent when you want repo-local Copilot behavior without relying on an installed CLI plugin.
 
+## Global Configs
+
+The [global-configs/setup-globals.js](global-configs/setup-globals.js) script deploys shared user-level configuration into Claude Code, Copilot CLI, Repomix, and VS Code, then installs the curated third-party skills with `npx skills add`.
+
+Run it from the repository root:
+
+```bash
+node ./global-configs/setup-globals.js
+```
+
+Useful modes:
+
+```bash
+node ./global-configs/setup-globals.js --skills-only
+node ./global-configs/setup-globals.js --skip-skills
+```
+
+The setup script currently installs these curated third-party skills with `npx skills add`:
+
+- `https://github.com/blader/humanizer`
+- `eraserlabs/eraser-io`
+
+By default it targets `claude-code` and `github-copilot` in global scope:
+
+```bash
+node ./global-configs/setup-globals.js --skills-only
+```
+
+The global-configs test coverage lives in [global-configs/tests/setup-globals.test.js](global-configs/tests/setup-globals.test.js). It covers:
+
+- Claude Code and Copilot CLI install target directories
+- VS Code Copilot user configuration directory
+- `--skills-only` and `--skip-skills` argument parsing
+- Curated `npx skills add` command composition
+- `npx skills list -g --json` parsing and per-agent skill checks
+
+Run the deterministic test suite with:
+
+```bash
+command node --test ./global-configs/tests/setup-globals.test.js
+```
+
+There is also an opt-in live assertion that checks the installed curated skills returned by `npx skills list -g --json` for both `Claude Code` and `GitHub Copilot`:
+
+```bash
+RUN_LIVE_SKILLS_ASSERTIONS=1 command node --test ./global-configs/tests/setup-globals.test.js
+```
+
+Notes:
+
+- A Claude skill like Humanizer is not a Copilot CLI plugin or a VS Code MCP server by itself.
+- The open `skills` CLI from `vercel-labs/skills` can install shared `SKILL.md`-based skills into both `~/.claude/skills` and `~/.copilot/skills`.
+- Eraser supports both skills and MCP. Prefer the MCP server when you want richer tool integration and your agent supports MCP.
+- Copilot CLI packages still need a proper plugin package such as [obsidian-vault](obsidian-vault) or [technical-article-assistant](technical-article-assistant).
+- VS Code Copilot integrations belong in [global-configs/vscode-copilot/mcp.json](global-configs/vscode-copilot/mcp.json) for MCP servers or [global-configs/vscode-copilot/settings.json](global-configs/vscode-copilot/settings.json) for chat/plugin settings.
+
 ## Adding Another Plugin Or Skill
 
 Create a new top-level folder for each new package, for example:
