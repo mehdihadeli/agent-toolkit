@@ -1,5 +1,5 @@
 {
-  "name": "obsidian-vault",
+  "name": "obsidian-vault-rest",
   "description": "Manage a software engineering Obsidian vault through the Obsidian Local REST API instead of direct filesystem scripts.",
   "version": "1.0.0",
   "license": "MIT",
