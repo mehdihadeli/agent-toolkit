@@ -60,7 +60,6 @@ jobs:
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
       EVAL_SECRET_1: ${{ secrets.TAVILY_API_KEY }}
-      EVAL_SECRET_2: ${{ secrets.BING_SEARCH_API_KEY }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -97,12 +96,12 @@ jobs:
           global-json-file: global.json
 
       - name: Start search MCP
+        env:
+          Search__EnableTavily: ${{ vars.ENABLE_TAVILY_SEARCH || 'false' }}
         run: |
           set -euo pipefail
           echo "TAVILY_API_KEY=$EVAL_SECRET_1" >> "$GITHUB_ENV"
-          echo "BING_SEARCH_API_KEY=$EVAL_SECRET_2" >> "$GITHUB_ENV"
           export TAVILY_API_KEY="$EVAL_SECRET_1"
-          export BING_SEARCH_API_KEY="$EVAL_SECRET_2"
           dotnet run --project plugins/search/mcps/search/AgentSkillsMcp.Search.csproj --no-launch-profile > "$RUNNER_TEMP/search-mcp.log" 2>&1 &
           echo $! > "$RUNNER_TEMP/search-mcp.pid"
           for attempt in {1..30}; do

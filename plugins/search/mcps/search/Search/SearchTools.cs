@@ -1,6 +1,5 @@
 using System.ComponentModel;
-using System.Net.Http.Json;
-using System.Text.Json.Serialization;
+using AgentSkillsMcp.Tavily;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Server;
 
@@ -12,11 +11,11 @@ public sealed class SearchTools(
 {
     [McpServerTool(Name = "search")]
     [Description(
-        "Search the web with Tavily or Bing and return AI-readable Markdown results. Page enrichment uses GET only."
+        "Search the web with Tavily and return AI-readable Markdown results. Page enrichment uses GET only."
     )]
     public async Task<string> SearchAsync(
         [Description("Search query.")] string query,
-        [Description("Search provider: tavily or bing.")] string provider = "tavily",
+        [Description("Search provider: tavily.")] string provider = "tavily",
         [Description("Maximum results, from 1 to 10.")] int max_results = 5,
         [Description("Fetch each result and include readable Markdown content.")]
             bool fetch_results = true,
@@ -40,8 +39,7 @@ public sealed class SearchTools(
         var results = normalizedProvider switch
         {
             "tavily" => await SearchTavilyAsync(query, max_results, cancellationToken),
-            "bing" => await SearchBingAsync(query, max_results, cancellationToken),
-            _ => throw new ArgumentException("provider must be tavily or bing.", nameof(provider)),
+            _ => throw new ArgumentException("provider must be tavily.", nameof(provider)),
         };
 
         var output = new System.Text.StringBuilder($"# Web search: {query}\n\n");
@@ -102,27 +100,33 @@ public sealed class SearchTools(
         CancellationToken cancellationToken
     )
     {
+        if (!options.Value.EnableTavily)
+        {
+            throw new InvalidOperationException(
+                "Tavily search is disabled. Set Search:EnableTavily to true."
+            );
+        }
+
         if (string.IsNullOrWhiteSpace(options.Value.TavilyApiKey))
         {
             throw new InvalidOperationException("Tavily is not configured. Set TAVILY_API_KEY.");
         }
 
-        var payload = new
-        {
-            api_key = options.Value.TavilyApiKey,
-            query,
-            search_depth = "advanced",
-            max_results = maxResults,
-            include_answer = true,
-            include_raw_content = true,
-        };
-        using var response = await httpClientFactory
-            .CreateClient("tavily")
-            .PostAsJsonAsync(options.Value.TavilyEndpoint, payload, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        var data =
-            await response.Content.ReadFromJsonAsync<TavilyResponse>(cancellationToken)
-            ?? throw new HttpRequestException("Tavily returned an empty response.");
+        var client = new TavilyClient(
+            httpClientFactory.CreateClient("tavily"),
+            options.Value.TavilyApiKey
+        );
+        var data = await client.SearchAsync(
+            new TavilySearchRequest
+            {
+                Query = query,
+                MaxResults = maxResults,
+                SearchDepth = "advanced",
+                IncludeAnswer = true,
+                IncludeRawContent = true,
+            },
+            cancellationToken
+        );
 
         return new SearchResponse(
             data.Answer,
@@ -136,90 +140,7 @@ public sealed class SearchTools(
         );
     }
 
-    private async Task<SearchResponse> SearchBingAsync(
-        string query,
-        int maxResults,
-        CancellationToken cancellationToken
-    )
-    {
-        if (string.IsNullOrWhiteSpace(options.Value.BingApiKey))
-        {
-            throw new InvalidOperationException("Bing is not configured. Set BING_SEARCH_API_KEY.");
-        }
-
-        var endpoint =
-            $"{options.Value.BingEndpoint}?q={Uri.EscapeDataString(query)}&count={maxResults}&responseFilter=Webpages";
-        using var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
-        request.Headers.Add("Ocp-Apim-Subscription-Key", options.Value.BingApiKey);
-        using var response = await httpClientFactory
-            .CreateClient("bing")
-            .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        var data =
-            await response.Content.ReadFromJsonAsync<BingResponse>(cancellationToken)
-            ?? throw new HttpRequestException("Bing returned an empty response.");
-
-        return new SearchResponse(
-            null,
-            data.WebPages?.Value.Select(result => new SearchItem(
-                    result.Name ?? "Untitled result",
-                    result.Url ?? string.Empty,
-                    null,
-                    result.Snippet
-                ))
-                .ToList() ?? []
-        );
-    }
-
     private sealed record SearchResponse(string? Answer, IReadOnlyList<SearchItem> Items);
 
     private sealed record SearchItem(string Title, string Url, string? Content, string? Snippet);
-
-    private sealed class TavilyResponse
-    {
-        [JsonPropertyName("answer")]
-        public string? Answer { get; set; }
-
-        [JsonPropertyName("results")]
-        public List<TavilyResult> Results { get; set; } = [];
-    }
-
-    private sealed class TavilyResult
-    {
-        [JsonPropertyName("title")]
-        public string? Title { get; set; }
-
-        [JsonPropertyName("url")]
-        public string? Url { get; set; }
-
-        [JsonPropertyName("content")]
-        public string? Content { get; set; }
-
-        [JsonPropertyName("raw_content")]
-        public string? RawContent { get; set; }
-    }
-
-    private sealed class BingResponse
-    {
-        [JsonPropertyName("webPages")]
-        public BingWebPages? WebPages { get; set; }
-    }
-
-    private sealed class BingWebPages
-    {
-        [JsonPropertyName("value")]
-        public List<BingResult> Value { get; set; } = [];
-    }
-
-    private sealed class BingResult
-    {
-        [JsonPropertyName("name")]
-        public string? Name { get; set; }
-
-        [JsonPropertyName("url")]
-        public string? Url { get; set; }
-
-        [JsonPropertyName("snippet")]
-        public string? Snippet { get; set; }
-    }
 }

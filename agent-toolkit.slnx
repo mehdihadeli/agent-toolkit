@@ -4,10 +4,14 @@
   <Folder Name="/plugins/dotnet-quality/agents/" />
   <Folder Name="/plugins/dotnet-quality/agents/dotnet-quality-agent/" />
   <Folder Name="/plugins/search/" />
+  <Folder Name="/plugins/search/shared/" />
   <Folder Name="/plugins/search/mcps/" />
   <Folder Name="/plugins/search/mcps/search/">
     <Project Path="plugins/search/mcps/search/AgentSkillsMcp.Fetch.csproj" />
     <Project Path="plugins/search/mcps/search/AgentSkillsMcp.Search.csproj" />
+  </Folder>
+  <Folder Name="/plugins/search/shared/tavily/">
+    <Project Path="plugins/search/shared/tavily/AgentSkillsMcp.Tavily.csproj" />
   </Folder>
   <Folder Name="/tests/" />
   <Folder Name="/tests/dotnet-quality/" />

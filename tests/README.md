@@ -60,7 +60,7 @@ Run MCP evaluations only after starting the search server at `http://127.0.0.1:6
 dotnet run --project plugins/search/mcps/search/AgentSkillsMcp.Search.csproj
 ```
 
-Then select `tests/search/vally/mcp/eval.yaml`. MCP evaluations may require `TAVILY_API_KEY` or `BING_SEARCH_API_KEY` for the research stimulus. Never commit credentials.
+Then select `tests/search/vally/mcp/eval.yaml`. MCP evaluations may require `TAVILY_API_KEY` for the research stimulus. Never commit credentials.
 
 GitHub Actions runs both evaluations in one job through `.github/workflows/evaluation.yml`. It installs GitHub Copilot CLI, starts the local search MCP once, and invokes Vally sequentially with `copilot-sdk` and, when enabled, `claude-cli`. Results use separate `copilot/` and `claude/` directories under one artifact. Root `.vally.yaml` discovers all nested plugin `eval.yaml` files. Configure the `COPILOT_GITHUB_TOKEN` repository secret for Copilot-backed evaluation jobs.
 

@@ -6,7 +6,6 @@ builder.Services.Configure<SearchOptions>(options =>
 {
     builder.Configuration.GetSection("Search").Bind(options);
     options.TavilyApiKey ??= builder.Configuration["TAVILY_API_KEY"];
-    options.BingApiKey ??= builder.Configuration["BING_SEARCH_API_KEY"];
 });
 
 builder
@@ -27,9 +26,7 @@ builder
             }
     );
 
-builder
-    .Services.AddHttpClient("tavily", client => client.Timeout = TimeSpan.FromSeconds(30))
-    .Services.AddHttpClient("bing", client => client.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddHttpClient("tavily", client => client.Timeout = TimeSpan.FromSeconds(30));
 
 builder
     .Services.AddMcpServer()

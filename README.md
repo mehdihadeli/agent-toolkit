@@ -167,7 +167,8 @@ GitHub Actions provides two validation workflows:
 The evaluation workflow runs Copilot first and can run Claude Code sequentially
 against the same specifications when `ENABLE_CLAUDE_EVAL=true`. See
 [docs/ci.md](docs/ci.md) for required secrets, local equivalents, and workflow
-details.
+details. The .NET workflow runs deterministic tests on pull requests and has a
+manual input for the credit-consuming live Tavily SDK tests.
 
 ## Contributing
 

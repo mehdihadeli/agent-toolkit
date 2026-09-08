@@ -11,6 +11,12 @@ on:
       - "global.json"
       - ".github/workflows/dotnet-tests.yml"
   workflow_dispatch:
+    inputs:
+      run_live_tavily:
+        description: Run live Tavily SDK integration tests
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -36,3 +42,32 @@ jobs:
 
       - name: Run tests
         run: dotnet test --solution agent-toolkit.slnx
+
+  live-tavily:
+    name: Live Tavily SDK tests
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_live_tavily }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+      TAVILY_RUN_LIVE_TESTS: "1"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Require Tavily API key
+        shell: bash
+        run: test -n "$TAVILY_API_KEY"
+
+      - name: Run live Tavily SDK tests
+        run: >-
+          dotnet test
+          --project tests/search/integration-tests/AgentSkillsMcp.Search.IntegrationTests.csproj
+          --filter-class AgentSkillsMcp.Search.Tests.TavilySdkIntegrationTests

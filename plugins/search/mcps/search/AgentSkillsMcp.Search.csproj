@@ -16,4 +16,8 @@
     <PackageReference Include="OpenAI" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\shared\tavily\AgentSkillsMcp.Tavily.csproj" />
+  </ItemGroup>
+
 </Project>

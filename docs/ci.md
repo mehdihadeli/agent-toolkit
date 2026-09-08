@@ -23,8 +23,10 @@ Its single job:
 2. Installs the SDK selected by `global.json`.
 3. Runs `dotnet test --solution agent-toolkit.slnx`.
 
-This workflow covers executable .NET plugins. It does not run Vally skill or
-prompt evaluations.
+This workflow covers executable .NET plugins. Live Tavily SDK tests are not
+part of normal pull-request runs because they consume API credits. Start this
+workflow manually and set `Run live Tavily SDK integration tests` when those
+tests are needed; the job requires the `TAVILY_API_KEY` secret.
 
 ## Evaluation workflow
 
@@ -71,12 +73,20 @@ Required for the default Copilot evaluation:
 
 - `COPILOT_GITHUB_TOKEN` secret, with `GITHUB_TOKEN` used as fallback.
 - `TAVILY_API_KEY` secret for search research scenarios.
-- `BING_SEARCH_API_KEY` secret for Bing-backed search scenarios.
 
 Optional Claude evaluation:
 
 - Repository variable `ENABLE_CLAUDE_EVAL=true`.
 - `ANTHROPIC_API_KEY` secret.
+
+Claude evaluation runs in the same evaluation job as Copilot, after the
+Copilot run, and uses the same Search MCP process. .NET tests run once because
+they are independent of the evaluator host; they are not duplicated for
+Claude and Copilot.
+
+Search providers are disabled by default in the Search MCP. The current search
+evaluation requires Tavily, so enable it explicitly with repository variable
+`ENABLE_TAVILY_SEARCH=true` when using that evaluation.
 
 Do not place credentials in Vally YAML, fixtures, workflow files, or source
 code.
@@ -118,3 +128,8 @@ vally eval \
 
 Search MCP evaluations require the local Search MCP and its provider
 credentials. See [plugin-eval.md](plugin-eval.md) for focused evaluations.
+
+Live Tavily SDK tests require both `TAVILY_RUN_LIVE_TESTS=1` and
+`TAVILY_API_KEY`; the manual workflow input configures the environment for
+them. Normal .NET runs leave the flag unset, so live tests are reported as
+skipped rather than making network calls.

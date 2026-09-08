@@ -53,18 +53,25 @@ Searches the web, enriches results, and returns cited Markdown. When `OPENAI_API
 - Responses are limited to 10 MiB and HTTP clients time out after 30 seconds.
 - Crawl is same-origin and bounded by page/depth limits.
 
-The MCP Streamable HTTP protocol itself may use its protocol-defined requests. Tavily's official search API requires an internal `POST`; this only calls Tavily's API and is not a page fetch. Bing search uses `GET`.
+The MCP Streamable HTTP protocol itself may use its protocol-defined requests. Tavily's official search API requires an internal `POST`; this only calls Tavily's API and is not a page fetch.
+
+Tavily integration is implemented by the shared SDK in
+`shared/tavily/AgentSkillsMcp.Tavily.csproj`, based on Tavily's OpenAPI
+specification. It provides typed Search and Extract operations plus
+`Microsoft.Extensions.AI` `AIFunction` wrappers.
 
 ## Configuration
 
 Set provider credentials through environment variables. Do not commit keys to source control.
 
 ```text
+Search__EnableTavily=false
 TAVILY_API_KEY=your-tavily-key
-BING_SEARCH_API_KEY=your-bing-key
 ```
 
-Optional endpoint overrides use configuration keys `Search:TavilyEndpoint` and `Search:BingEndpoint`.
+Tavily is disabled by default. Set `Search__EnableTavily=true` before using its
+API key. The GitHub Actions workflow maps repository variable
+`ENABLE_TAVILY_SEARCH` to this option.
 
 ## Local development
 
@@ -93,7 +100,6 @@ The dedicated [Dockerfile](mcps/search/Dockerfile) uses an architecture-aware mu
 docker build -f mcps/search/Dockerfile -t agent-toolkit-mcp-fetch .
 docker run --rm -p 8080:8080 \
   -e TAVILY_API_KEY \
-  -e BING_SEARCH_API_KEY \
   agent-toolkit-mcp-fetch
 ```
 
