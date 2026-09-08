@@ -1,6 +1,17 @@
 name: .NET plugin tests
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "plugins/**/agents/**"
+      - "plugins/**/mcps/**"
+      - "tests/**/unit-tests/**"
+      - "tests/**/integration-tests/**"
+      - "agent-toolkit.slnx"
+      - "global.json"
+      - ".github/workflows/dotnet-tests.yml"
   pull_request:
     paths:
       - "plugins/**/agents/**"

@@ -1,6 +1,16 @@
 name: Evaluation
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "plugins/**"
+      - "tests/**"
+      - "tools/**"
+      - ".vally.yaml"
+      - "global.json"
+      - ".github/workflows/evaluation*.yml"
   pull_request:
     paths:
       - "plugins/**"

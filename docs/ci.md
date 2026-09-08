@@ -13,9 +13,10 @@ request when a newer run starts.
 
 ## .NET plugin tests
 
-The `.NET plugin tests` workflow runs for pull requests that change plugin
-agents or MCPs, unit or integration tests, the solution, the SDK selection, or
-the workflow itself. It can also be started manually with `workflow_dispatch`.
+The `.NET plugin tests` workflow runs for pull requests and pushes to `main`
+that change plugin agents or MCPs, unit or integration tests, the solution, the
+SDK selection, or the workflow itself. It can also be started manually with
+`workflow_dispatch`.
 
 Its single job:
 
@@ -30,9 +31,9 @@ tests are needed; the job requires the `TAVILY_API_KEY` secret.
 
 ## Evaluation workflow
 
-The `Evaluation` workflow runs when plugin, test, tool, Vally configuration, or
-SDK files change. It also supports manual execution and runs on a weekly
-schedule. It has two jobs:
+The `Evaluation` workflow runs for relevant pull requests and pushes to `main`.
+It also supports manual execution and runs on a weekly schedule. It has two
+jobs:
 
 ### Lint job
 
