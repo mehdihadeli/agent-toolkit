@@ -1,0 +1,38 @@
+name: .NET plugin tests
+
+on:
+  pull_request:
+    paths:
+      - "plugins/**/agents/**"
+      - "plugins/**/mcps/**"
+      - "tests/**/unit-tests/**"
+      - "tests/**/integration-tests/**"
+      - "agent-toolkit.slnx"
+      - "global.json"
+      - ".github/workflows/dotnet-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dotnet-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: .NET solution tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Run tests
+        run: dotnet test --solution agent-toolkit.slnx

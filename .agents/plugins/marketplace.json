@@ -1,0 +1,25 @@
+{
+  "name": "agent-toolkit",
+  "plugins": [
+    {
+      "name": "agent-toolkit-search",
+      "source": "../../plugins/search",
+      "version": "0.1.0"
+    },
+    {
+      "name": "agent-toolkit-dotnet-quality",
+      "source": "../../plugins/dotnet-quality",
+      "version": "0.1.0"
+    },
+    {
+      "name": "agent-toolkit-docs-research",
+      "source": "../../plugins/docs-research",
+      "version": "0.1.0"
+    },
+    {
+      "name": "agent-toolkit-skill-guide",
+      "source": "../../plugins/skill-guide",
+      "version": "0.1.0"
+    }
+  ]
+}

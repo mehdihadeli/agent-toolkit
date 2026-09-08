@@ -1,0 +1,13 @@
+{
+  "name": "agent-toolkit-docs-research",
+  "version": "0.1.0",
+  "description": "Research official documentation and turn findings into implementation checklists.",
+  "skills": "./skills/",
+  "author": { "name": "Agent Toolkit" },
+  "license": "MIT",
+  "interface": {
+    "displayName": "Handy Documentation Research",
+    "shortDescription": "Version-aware official documentation research workflows.",
+    "category": "Research"
+  }
+}

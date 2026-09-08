@@ -1,0 +1,38 @@
+name: handy_search_research
+version: "1.0"
+type: capability
+environment:
+  mcpServers:
+    agent-toolkit-search:
+      type: http
+      url: http://127.0.0.1:6243
+      timeout: 30s
+defaults:
+  runs: 1
+  timeout: 2m
+  executor: copilot-sdk
+stimuli:
+  - name: research-question
+    prompt: |
+      Use the agent-toolkit-search MCP research tool to research "what is HTTP" and
+      return a concise answer with cited source links. Do not use uncited
+      general knowledge when the tool returns no sources.
+    graders:
+      - type: output-contains
+        name: cited answer
+        config:
+          substring: http
+          case_sensitive: false
+      - type: tool-calls
+        name: research tool used
+        config:
+          required: [research]
+    constraints:
+      max_turns: 6
+      max_tokens: 3000
+      expect_tools: [research]
+scoring:
+  weights:
+    output-contains: 0.5
+    tool-calls: 0.5
+  threshold: 0.7

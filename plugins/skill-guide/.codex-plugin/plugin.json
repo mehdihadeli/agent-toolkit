@@ -1,0 +1,13 @@
+{
+  "name": "agent-toolkit-skill-guide",
+  "version": "0.1.0",
+  "description": "Explain how to create, organize, and maintain agent skills.",
+  "skills": "./skills/",
+  "author": { "name": "Agent Toolkit" },
+  "license": "MIT",
+  "interface": {
+    "displayName": "Handy Skill Guide",
+    "shortDescription": "Design and validate reusable agent skills.",
+    "category": "Authoring"
+  }
+}

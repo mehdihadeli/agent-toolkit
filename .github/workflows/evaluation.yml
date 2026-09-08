@@ -1,0 +1,152 @@
+name: Evaluation
+
+on:
+  pull_request:
+    paths:
+      - "plugins/**"
+      - "tests/**"
+      - "tools/**"
+      - ".vally.yaml"
+      - "global.json"
+      - ".github/workflows/evaluation*.yml"
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: evaluation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Vally lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Vally
+        run: npm install --global @microsoft/vally-cli@0.14.0
+
+      - name: Install GitHub Copilot CLI
+        run: npm install --global @github/copilot
+
+      - name: Configure Copilot CLI path
+        run: echo "COPILOT_CLI_PATH=$(command -v copilot)" >> "$GITHUB_ENV"
+
+      - name: Validate repository metadata and links
+        run: python tools/validate_repository.py
+
+      - name: Lint skills and evaluation configuration
+        run: vally lint .
+
+  evaluate:
+    name: Run Vally evaluation suite
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+      EVAL_SECRET_1: ${{ secrets.TAVILY_API_KEY }}
+      EVAL_SECRET_2: ${{ secrets.BING_SEARCH_API_KEY }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Vally
+        run: npm install --global @microsoft/vally-cli@0.14.0
+
+      - name: Install GitHub Copilot CLI
+        run: npm install --global @github/copilot
+
+      - name: Configure Copilot CLI path
+        run: echo "COPILOT_CLI_PATH=$(command -v copilot)" >> "$GITHUB_ENV"
+
+      - name: Install Claude Code
+        if: ${{ vars.ENABLE_CLAUDE_EVAL == 'true' }}
+        run: npm install --global @anthropic-ai/claude-code
+
+      - name: Build Claude Vally executor
+        if: ${{ vars.ENABLE_CLAUDE_EVAL == 'true' }}
+        run: |
+          npm ci --prefix tools/vally-executor-claude
+          npm run build --prefix tools/vally-executor-claude
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Start search MCP
+        run: |
+          set -euo pipefail
+          echo "TAVILY_API_KEY=$EVAL_SECRET_1" >> "$GITHUB_ENV"
+          echo "BING_SEARCH_API_KEY=$EVAL_SECRET_2" >> "$GITHUB_ENV"
+          export TAVILY_API_KEY="$EVAL_SECRET_1"
+          export BING_SEARCH_API_KEY="$EVAL_SECRET_2"
+          dotnet run --project plugins/search/mcps/search/AgentSkillsMcp.Search.csproj --no-launch-profile > "$RUNNER_TEMP/search-mcp.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/search-mcp.pid"
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:6243 > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/search-mcp.log"
+          exit 1
+
+      - name: Run Vally evaluation
+        run: |
+          set -euo pipefail
+          vally eval \
+            --executor copilot-sdk \
+            --suite plugin-evals \
+            --output-dir .work/vally/results/copilot \
+            --require-pass
+
+      - name: Run Vally evaluation with Claude Code
+        if: ${{ vars.ENABLE_CLAUDE_EVAL == 'true' }}
+        run: |
+          set -euo pipefail
+          vally eval \
+            --executor-plugin ./tools/vally-executor-claude \
+            --executor claude-cli \
+            --suite plugin-evals \
+            --output-dir .work/vally/results/claude \
+            --require-pass
+
+      - name: Stop search MCP
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ -f "$RUNNER_TEMP/search-mcp.pid" ]; then
+            kill "$(cat "$RUNNER_TEMP/search-mcp.pid")" || true
+          fi
+
+      - name: Upload evaluation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vally-results-plugin-evals
+          path: .work/vally/results/
+          if-no-files-found: warn
+          retention-days: 14

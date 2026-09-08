@@ -1,0 +1,7 @@
+{
+  "name": "agent-toolkit-docs-research",
+  "version": "0.1.0",
+  "description": "Research official documentation and turn findings into implementation checklists.",
+  "author": { "name": "Agent Toolkit" },
+  "license": "MIT"
+}

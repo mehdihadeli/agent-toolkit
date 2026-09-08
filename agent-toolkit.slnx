@@ -1,0 +1,27 @@
+<Solution>
+  <Folder Name="/plugins/" />
+  <Folder Name="/plugins/dotnet-quality/" />
+  <Folder Name="/plugins/dotnet-quality/agents/" />
+  <Folder Name="/plugins/dotnet-quality/agents/dotnet-quality-agent/" />
+  <Folder Name="/plugins/search/" />
+  <Folder Name="/plugins/search/mcps/" />
+  <Folder Name="/plugins/search/mcps/search/">
+    <Project Path="plugins/search/mcps/search/AgentSkillsMcp.Fetch.csproj" />
+    <Project Path="plugins/search/mcps/search/AgentSkillsMcp.Search.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/dotnet-quality/" />
+  <Folder Name="/tests/dotnet-quality/integration-tests/">
+    <Project Path="tests/dotnet-quality/integration-tests/AgentSkillsMcp.DotnetQualityAgent.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/dotnet-quality/unit-tests/">
+    <Project Path="tests/dotnet-quality/unit-tests/AgentSkillsMcp.DotnetQualityAgent.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/search/" />
+  <Folder Name="/tests/search/integration-tests/">
+    <Project Path="tests/search/integration-tests/AgentSkillsMcp.Search.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/search/unit-tests/">
+    <Project Path="tests/search/unit-tests/AgentSkillsMcp.Search.Tests.csproj" />
+  </Folder>
+</Solution>

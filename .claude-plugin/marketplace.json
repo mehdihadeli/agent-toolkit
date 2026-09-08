@@ -1,64 +1,34 @@
 {
-  "name": "skills-plugins-acps",
-  "owner": {
-    "name": "GitHub Copilot",
-    "email": "noreply@example.com"
-  },
+  "name": "agent-toolkit",
+  "owner": { "name": "Agent Toolkit" },
   "metadata": {
-    "description": "Local marketplace for plugins, skills, and ACP-related packages.",
-    "version": "1.0.0",
-    "author": "GitHub Copilot"
+    "version": "0.1.0",
+    "description": ".NET MCP and coding-agent plugins for research and quality workflows."
   },
   "plugins": [
     {
-      "name": "obsidian-vault",
-      "source": "./obsidian-vault",
-      "version": "1.0.0",
-      "description": "Manage a software engineering Obsidian vault through the Obsidian Local REST API instead of direct filesystem scripts.",
-      "keywords": [
-        "obsidian",
-        "local-rest-api",
-        "knowledge-base",
-        "software-engineering",
-        "dotnet",
-        "ai",
-        "docker",
-        "kubernetes"
-      ],
-      "category": "productivity",
-      "tags": [
-        "obsidian",
-        "knowledge-base",
-        "work-journal",
-        "note-taking",
-        "documentation",
-        "automation"
-      ]
+      "name": "agent-toolkit-search",
+      "source": "./plugins/search",
+      "version": "0.1.0",
+      "category": "research"
     },
     {
-      "name": "technical-article-assistant",
-      "source": "./technical-article-assistant",
-      "version": "1.0.0",
-      "description": "Plan and scaffold architect-grade technical articles for AI, .NET, software architecture, and DevOps with evidence packs, outlines, review gates, and publication-ready article workspaces.",
-      "keywords": [
-        "technical-writing",
-        "blog",
-        "ai",
-        "dotnet",
-        "software-architecture",
-        "devops",
-        "content-strategy",
-        "architecture"
-      ],
-      "category": "content-creation",
-      "tags": [
-        "technical-blogging",
-        "software-architecture",
-        "ai-engineering",
-        "dotnet",
-        "devops",
-        "longform-writing"
-      ]
+      "name": "agent-toolkit-dotnet-quality",
+      "source": "./plugins/dotnet-quality",
+      "version": "0.1.0",
+      "category": "quality"
+    },
+    {
+      "name": "agent-toolkit-docs-research",
+      "source": "./plugins/docs-research",
+      "version": "0.1.0",
+      "category": "research"
+    },
+    {
+      "name": "agent-toolkit-skill-guide",
+      "source": "./plugins/skill-guide",
+      "version": "0.1.0",
+      "category": "authoring"
     }
   ]
 }

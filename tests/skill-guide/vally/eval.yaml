@@ -1,0 +1,39 @@
+name: skill_guide
+version: "1.0"
+type: capability
+environment:
+  skills:
+    - ../../../plugins/skill-guide/skills/skill-guide
+  files:
+    - src: fixtures/requirements.md
+      dest: requirements.md
+defaults:
+  runs: 1
+  timeout: 2m
+  executor: copilot-sdk
+stimuli:
+  - name: design-skill
+    prompt: |
+      Read requirements.md and use the skill-guide skill. Return a minimal
+      SKILL.md starter for the requested build-failure skill, followed by a
+      validation checklist. Include frontmatter, trigger guidance, progressive
+      disclosure, and a realistic prompt to test it.
+    graders:
+      - type: output-contains
+        name: skill frontmatter
+        config:
+          substring: "name: example-skill"
+          case_sensitive: false
+      - type: output-contains
+        name: validation checklist
+        config:
+          substring: Validation checklist
+          case_sensitive: false
+    constraints:
+      max_turns: 6
+      max_tokens: 3500
+      expect_skills: [skill-guide]
+scoring:
+  weights:
+    output-contains: 1.0
+  threshold: 0.8

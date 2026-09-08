@@ -1,0 +1,39 @@
+name: docs_research_skill
+version: "1.0"
+type: capability
+environment:
+  skills:
+    - ../../../plugins/docs-research/skills/docs-research
+  files:
+    - src: fixtures/task.md
+      dest: task.md
+defaults:
+  runs: 1
+  timeout: 2m
+  executor: copilot-sdk
+stimuli:
+  - name: produce-versioned-checklist
+    prompt: |
+      Read task.md and use the docs-research skill. Research the current Vally
+      documentation approach for this task. Return exactly these headings:
+      What changed, What matters for this repo, Implementation checklist,
+      Risks/unknowns. Include official source URLs and do not invent unknowns.
+    graders:
+      - type: output-contains
+        name: checklist headings
+        config:
+          substring: Implementation checklist
+          case_sensitive: false
+      - type: output-contains
+        name: source citation
+        config:
+          substring: microsoft.github.io/vally
+          case_sensitive: false
+    constraints:
+      max_turns: 8
+      max_tokens: 4000
+      expect_skills: [docs-research]
+scoring:
+  weights:
+    output-contains: 1.0
+  threshold: 0.8

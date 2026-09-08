@@ -1,0 +1,8 @@
+{
+  "name": "agent-toolkit-search",
+  "version": "0.1.0",
+  "description": "Fetch, search, crawl, inspect llms.txt resources, and conduct cited research through MCP.",
+  "author": { "name": "Agent Toolkit" },
+  "license": "MIT",
+  "mcpServers": "./.mcp.json"
+}

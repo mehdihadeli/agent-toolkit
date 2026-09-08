@@ -1,0 +1,24 @@
+# Vally project configuration.
+# See https://microsoft.github.io/vally/reference/vally-yaml/
+paths:
+  skills:
+    - plugins/docs-research/skills
+    - plugins/skill-guide/skills
+  evals:
+    - tests/*/vally
+  results: .work/vally/results
+  evalFilenames:
+    - eval.yaml
+
+environments:
+  repository:
+    commands:
+      - dotnet --version
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
+suites:
+  plugin-evals:
+    description: "Behavioral checks for plugin skills, agents, and MCP tools."
+    evals:
+      - tests/*/vally/**/*.yaml

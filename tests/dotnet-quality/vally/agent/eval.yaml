@@ -1,0 +1,43 @@
+name: dotnet_quality_agent
+version: "1.0"
+type: capability
+environment:
+  files:
+    - src: fixtures/Sample.cs
+      dest: Sample.cs
+    - src: fixtures/Sample.csproj
+      dest: Sample.csproj
+    - src: ../../../../.github/agents/dotnet-quality.agent.md
+      dest: .github/agents/dotnet-quality.agent.md
+    - src: ../../../../.github/agents/dotnet-quality.agent.md
+      dest: .claude/agents/dotnet-quality.md
+defaults:
+  runs: 1
+  timeout: 2m
+  executor: copilot-sdk
+stimuli:
+  - name: prioritize-quality-findings
+    prompt: |
+      Inspect Sample.cs and Sample.csproj. Act as the dotnet-quality agent:
+      provide a concise prioritized report with impact, confidence, affected
+      files, exact scope, and next steps. Do not modify files. If the analysis
+      tool is unavailable, state that limitation and still explain what must
+      be verified.
+    graders:
+      - type: output-contains
+        name: prioritized report
+        config:
+          substring: priority
+          case_sensitive: false
+      - type: output-contains
+        name: read-only guidance
+        config:
+          substring: do not modify
+          case_sensitive: false
+    constraints:
+      max_turns: 8
+      max_tokens: 4000
+scoring:
+  weights:
+    output-contains: 1.0
+  threshold: 0.7

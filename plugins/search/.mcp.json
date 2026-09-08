@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "agent-toolkit-search": {
+      "type": "http",
+      "url": "http://localhost:6243"
+    }
+  }
+}

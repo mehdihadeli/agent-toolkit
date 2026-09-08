@@ -1,0 +1,7 @@
+{
+  "name": "agent-toolkit-dotnet-quality",
+  "version": "0.1.0",
+  "description": "Standalone .NET Copilot SDK agent for analyzing and prioritizing dotnet format diagnostics.",
+  "author": { "name": "Agent Toolkit" },
+  "license": "MIT"
+}

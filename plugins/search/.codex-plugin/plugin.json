@@ -1,0 +1,12 @@
+{
+  "name": "agent-toolkit-search",
+  "version": "0.1.0",
+  "description": "Fetch, search, crawl, inspect llms.txt resources, and conduct cited research through MCP.",
+  "author": { "name": "Agent Toolkit" },
+  "license": "MIT",
+  "interface": {
+    "displayName": "Agent Skills Search",
+    "shortDescription": "Public web retrieval and cited research through MCP.",
+    "category": "Research"
+  }
+}

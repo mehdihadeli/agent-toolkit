@@ -1,0 +1,12 @@
+{
+  "name": "agent-toolkit-dotnet-quality",
+  "version": "0.1.0",
+  "description": "Read-only .NET quality analysis through the GitHub Copilot SDK.",
+  "author": { "name": "Agent Toolkit" },
+  "license": "MIT",
+  "interface": {
+    "displayName": ".NET Quality",
+    "shortDescription": "Prioritize dotnet format diagnostics without modifying files.",
+    "category": "Quality"
+  }
+}
