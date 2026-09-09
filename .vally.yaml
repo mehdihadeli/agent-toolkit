@@ -5,7 +5,10 @@ paths:
     - plugins/docs-research/skills
     - plugins/skill-guide/skills
   evals:
-    - tests/*/vally
+    - tests/docs-research/vally
+    - tests/dotnet-quality/vally
+    - tests/search/vally
+    - tests/skill-guide/vally
   results: .work/vally/results
   evalFilenames:
     - eval.yaml
@@ -16,8 +19,53 @@ environments:
       - dotnet --version
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  docs-research:
+    skills:
+      - plugins/docs-research/skills/docs-research
+  docs-research-with-search:
+    skills:
+      - plugins/docs-research/skills/docs-research
+    mcpServers:
+      agent-toolkit-search:
+        type: stdio
+        command: dotnet
+        args:
+          - run
+          - --project
+          - plugins/search/mcps/search/AgentSkillsMcp.Search.csproj
+          - --no-launch-profile
+  skill-guide:
+    skills:
+      - plugins/skill-guide/skills/skill-guide
+  dotnet-quality-agent:
+    files:
+      - src: .github/agents/dotnet-quality.agent.md
+        dest: .github/agents/dotnet-quality.agent.md
+      - src: .github/agents/dotnet-quality.agent.md
+        dest: .claude/agents/dotnet-quality.md
+  search-mcp:
+    mcpServers:
+      agent-toolkit-search:
+        type: stdio
+        command: dotnet
+        args:
+          - run
+          - --project
+          - plugins/search/mcps/search/AgentSkillsMcp.Search.csproj
+          - --no-launch-profile
+        timeout: 30s
 
 suites:
+  search-smoke:
+    description: "Fast Search MCP smoke checks with bounded public fetches."
+    filter:
+      area: search
+      priority: p0
+  search-ci:
+    description: "Full Search MCP capability coverage for CI."
+    filter:
+      area: search
+      priority: [p0, p1]
   plugin-evals:
     description: "Behavioral checks for plugin skills, agents, and MCP tools."
     evals:

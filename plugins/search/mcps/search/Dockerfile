@@ -16,4 +16,4 @@ COPY --link --from=build /app/publish .
 USER $APP_UID
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
-ENTRYPOINT ["dotnet", "HandyToolsMcp.Search.dll"]
+ENTRYPOINT ["dotnet", "AgentSkillsMcp.Search.dll", "--http"]

@@ -65,7 +65,7 @@ From the repository root:
 ```bash
 python tools/validate_repository.py
 git diff --check
-vally lint .
+make vally-lint
 dotnet test --solution agent-toolkit.slnx
 ```
 
@@ -77,7 +77,7 @@ suite and integration tests.
 Run the Copilot-backed evaluation suite with:
 
 ```bash
-vally eval --executor copilot-sdk --suite plugin-evals --require-pass
+make vally-eval
 ```
 
 Claude evaluation is optional and requires the local executor, Claude

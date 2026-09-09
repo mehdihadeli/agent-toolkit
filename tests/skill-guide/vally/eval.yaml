@@ -17,12 +17,13 @@ stimuli:
       Read requirements.md and use the skill-guide skill. Return a minimal
       SKILL.md starter for the requested build-failure skill, followed by a
       validation checklist. Include frontmatter, trigger guidance, progressive
-      disclosure, and a realistic prompt to test it.
+      disclosure, and a realistic prompt to test it. Use exactly
+      `name: build-failure` in the frontmatter.
     graders:
       - type: output-contains
         name: skill frontmatter
         config:
-          substring: "name: example-skill"
+          substring: "name: build-failure"
           case_sensitive: false
       - type: output-contains
         name: validation checklist

@@ -6,14 +6,39 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand"
   },
   "peerDependencies": {
     "@microsoft/vally": "^0.14.0"
   },
   "devDependencies": {
     "@microsoft/vally": "^0.14.0",
+    "@types/jest": "^29.5.14",
     "@types/node": "^22.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
     "typescript": "^5.0.0"
+  },
+  "jest": {
+    "preset": "ts-jest/presets/default-esm",
+    "testEnvironment": "node",
+    "extensionsToTreatAsEsm": [
+      ".ts"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/dist/"
+    ],
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "globals": {
+      "ts-jest": {
+        "useESM": true
+      }
+    }
+  },
+  "dependencies": {
+    "agent-toolkit-evaluation-runtime": "file:../.."
   }
 }

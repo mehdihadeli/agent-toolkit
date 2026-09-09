@@ -1,0 +1,15 @@
+{
+  "evalName": "docs_research_with_available_search",
+  "evalFilePath": "D:\\OpenSource\\agent-toolkit\\tests\\docs-research\\vally\\with-search\\eval.yaml",
+  "variant": "main",
+  "stimulusName": "use-available-search-tool",
+  "trialId": "D:\\OpenSource\\agent-toolkit\\tests\\docs-research\\vally\\with-search\\eval.yaml::main::_::use-available-search-tool::trial-0",
+  "executorName": "copilot-sdk",
+  "attemptIndex": 0,
+  "startedAt": "2026-09-08T14:55:28.834Z",
+  "status": "error",
+  "error": "Could not resolve a @github/copilot platform package (tried @github/copilot-win32-x64). Ensure @github/copilot is installed, or pass cliPath/cliUrl to CopilotClient.",
+  "completedAt": "2026-09-08T14:55:28.852Z",
+  "executorSessionId": "51f074a2-121e-4016-a9f3-b684acf277e4",
+  "logSource": "none"
+}

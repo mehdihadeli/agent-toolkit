@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import type {
   Executor,
@@ -15,10 +15,41 @@ import { computeMetrics } from "@microsoft/vally";
 
 interface ClaudeExecutorConfig {
   command?: string;
+  provider?: ClaudeProviderConfig;
   permissionMode?: string;
   allowDangerouslySkipPermissions?: boolean;
   maxBudgetUsd?: number;
   extraArgs?: string[];
+}
+
+interface ClaudeProviderConfig {
+  baseUrl?: string;
+  apiKeyEnv?: string;
+  bearerTokenEnv?: string;
+}
+
+export interface ClaudeProviderSettings {
+  apiKey?: string;
+  bearerToken?: string;
+  baseUrl?: string;
+}
+
+export function resolveClaudeProvider(
+  config: ClaudeProviderConfig = {},
+  env: NodeJS.ProcessEnv = process.env,
+): ClaudeProviderSettings {
+  const tokenEnv = config.bearerTokenEnv ?? config.apiKeyEnv;
+  const token = tokenEnv ? env[tokenEnv] : undefined;
+  if (tokenEnv && !token)
+    throw new Error(
+      `Claude provider environment variable is unset: ${tokenEnv}`,
+    );
+
+  return {
+    apiKey: config.bearerTokenEnv ? undefined : token,
+    bearerToken: config.bearerTokenEnv ? token : undefined,
+    baseUrl: config.baseUrl,
+  };
 }
 
 interface ClaudeMessage {
@@ -49,6 +80,7 @@ export class ClaudeCliExecutor implements Executor {
     const value = config as Record<string, unknown>;
     const supported = [
       "command",
+      "provider",
       "permissionMode",
       "allowDangerouslySkipPermissions",
       "maxBudgetUsd",
@@ -60,6 +92,23 @@ export class ClaudeCliExecutor implements Executor {
     }
     if (value.command !== undefined && typeof value.command !== "string")
       throw new Error("claude-cli config.command must be a string");
+    if (
+      value.provider !== undefined &&
+      (typeof value.provider !== "object" ||
+        value.provider === null ||
+        Array.isArray(value.provider))
+    ) {
+      throw new Error("claude-cli config.provider must be an object");
+    }
+    if (value.provider !== undefined) {
+      const provider = value.provider as Record<string, unknown>;
+      for (const key of Object.keys(provider)) {
+        if (!["baseUrl", "apiKeyEnv", "bearerTokenEnv"].includes(key))
+          throw new Error(`Unsupported claude-cli provider config key: ${key}`);
+        if (typeof provider[key] !== "string")
+          throw new Error(`claude-cli provider.${key} must be a string`);
+      }
+    }
     if (
       value.permissionMode !== undefined &&
       typeof value.permissionMode !== "string"
@@ -104,6 +153,15 @@ export class ClaudeCliExecutor implements Executor {
     const turnId = randomUUID();
     const prompt = stimulus.prompt ?? stimulus.turns?.[0] ?? "";
     const config = (options.executorConfig ?? {}) as ClaudeExecutorConfig;
+    const provider = resolveClaudeProvider(config.provider);
+    const childEnv = { ...process.env, ...(options.env ?? {}) };
+    const model = options.model ?? childEnv.ANTHROPIC_MODEL ?? "sonnet";
+    if (provider.apiKey) childEnv.ANTHROPIC_API_KEY = provider.apiKey;
+    if (provider.bearerToken) {
+      delete childEnv.ANTHROPIC_API_KEY;
+      childEnv.ANTHROPIC_AUTH_TOKEN = provider.bearerToken;
+    }
+    if (provider.baseUrl) childEnv.ANTHROPIC_BASE_URL = provider.baseUrl;
     const mcpConfigPath = options.mcpServers
       ? await this.writeMcpConfig(options.mcpServers)
       : undefined;
@@ -133,7 +191,7 @@ export class ClaudeCliExecutor implements Executor {
       "--output-format",
       "stream-json",
       "--model",
-      options.model ?? "sonnet",
+      model,
       "--permission-mode",
       config.permissionMode ?? "acceptEdits",
       "--session-id",
@@ -159,7 +217,7 @@ export class ClaudeCliExecutor implements Executor {
     try {
       child = spawn(config.command ?? "claude", args, {
         cwd: options.workDir,
-        env: { ...process.env, ...(options.env ?? {}) },
+        env: childEnv,
         stdio: ["ignore", "pipe", "pipe"],
         windowsHide: true,
       });
@@ -206,6 +264,7 @@ export class ClaudeCliExecutor implements Executor {
                 resultSessionId = id;
               },
               options,
+              model,
               toolNames,
             );
           }
@@ -227,7 +286,7 @@ export class ClaudeCliExecutor implements Executor {
       metadata: {
         startedAt,
         completedAt,
-        model: options.model ?? "sonnet",
+        model,
         executor: this.name,
         skillsLoaded: (options.skills ?? []).map((skill) => skill.name),
         sessionID: resultSessionId,
@@ -255,6 +314,7 @@ export class ClaudeCliExecutor implements Executor {
     turnId: string,
     setSessionId: (id: string) => void,
     options: ExecutorOptions,
+    model: string,
     toolNames: Map<string, string>,
   ): void {
     if (!line.trim()) return;
@@ -324,7 +384,7 @@ export class ClaudeCliExecutor implements Executor {
           outputTokens: message.usage.output_tokens ?? 0,
           cacheReadTokens: message.usage.cache_read_input_tokens,
           cacheWriteTokens: message.usage.cache_creation_input_tokens,
-          model: options.model ?? "sonnet",
+          model,
         },
       });
     }

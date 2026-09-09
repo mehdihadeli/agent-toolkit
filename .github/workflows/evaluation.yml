@@ -8,6 +8,9 @@ on:
       - "plugins/**"
       - "tests/**"
       - "tools/**"
+      - "package.json"
+      - "package-lock.json"
+      - "Makefile"
       - ".vally.yaml"
       - "global.json"
       - ".github/workflows/evaluation*.yml"
@@ -16,6 +19,9 @@ on:
       - "plugins/**"
       - "tests/**"
       - "tools/**"
+      - "package.json"
+      - "package-lock.json"
+      - "Makefile"
       - ".vally.yaml"
       - "global.json"
       - ".github/workflows/evaluation*.yml"
@@ -45,20 +51,14 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install Vally
-        run: npm install --global @microsoft/vally-cli@0.14.0
-
-      - name: Install GitHub Copilot CLI
-        run: npm install --global @github/copilot
-
-      - name: Configure Copilot CLI path
-        run: echo "COPILOT_CLI_PATH=$(command -v copilot)" >> "$GITHUB_ENV"
+      - name: Install repository Node dependencies
+        run: npm ci
 
       - name: Validate repository metadata and links
-        run: python tools/validate_repository.py
+        run: make validate
 
       - name: Lint skills and evaluation configuration
-        run: vally lint .
+        run: make vally-lint
 
   evaluate:
     name: Run Vally evaluation suite
@@ -69,7 +69,8 @@ jobs:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
-      EVAL_SECRET_1: ${{ secrets.TAVILY_API_KEY }}
+      TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+      Search__EnableTavily: ${{ vars.ENABLE_TAVILY_SEARCH || 'false' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -81,14 +82,8 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install Vally
-        run: npm install --global @microsoft/vally-cli@0.14.0
-
-      - name: Install GitHub Copilot CLI
-        run: npm install --global @github/copilot
-
-      - name: Configure Copilot CLI path
-        run: echo "COPILOT_CLI_PATH=$(command -v copilot)" >> "$GITHUB_ENV"
+      - name: Install repository Node dependencies
+        run: npm ci
 
       - name: Install Claude Code
         if: ${{ vars.ENABLE_CLAUDE_EVAL == 'true' }}
@@ -105,51 +100,12 @@ jobs:
         with:
           global-json-file: global.json
 
-      - name: Start search MCP
-        env:
-          Search__EnableTavily: ${{ vars.ENABLE_TAVILY_SEARCH || 'false' }}
-        run: |
-          set -euo pipefail
-          echo "TAVILY_API_KEY=$EVAL_SECRET_1" >> "$GITHUB_ENV"
-          export TAVILY_API_KEY="$EVAL_SECRET_1"
-          dotnet run --project plugins/search/mcps/search/AgentSkillsMcp.Search.csproj --no-launch-profile > "$RUNNER_TEMP/search-mcp.log" 2>&1 &
-          echo $! > "$RUNNER_TEMP/search-mcp.pid"
-          for attempt in {1..30}; do
-            if curl --fail --silent http://127.0.0.1:6243 > /dev/null; then
-              exit 0
-            fi
-            sleep 2
-          done
-          cat "$RUNNER_TEMP/search-mcp.log"
-          exit 1
-
       - name: Run Vally evaluation
-        run: |
-          set -euo pipefail
-          vally eval \
-            --executor copilot-sdk \
-            --suite plugin-evals \
-            --output-dir .work/vally/results/copilot \
-            --require-pass
+        run: make vally-eval-copilot-ci
 
       - name: Run Vally evaluation with Claude Code
         if: ${{ vars.ENABLE_CLAUDE_EVAL == 'true' }}
-        run: |
-          set -euo pipefail
-          vally eval \
-            --executor-plugin ./tools/vally-executor-claude \
-            --executor claude-cli \
-            --suite plugin-evals \
-            --output-dir .work/vally/results/claude \
-            --require-pass
-
-      - name: Stop search MCP
-        if: always()
-        run: |
-          set -euo pipefail
-          if [ -f "$RUNNER_TEMP/search-mcp.pid" ]; then
-            kill "$(cat "$RUNNER_TEMP/search-mcp.pid")" || true
-          fi
+        run: make vally-eval-claude-ci
 
       - name: Upload evaluation results
         if: always()

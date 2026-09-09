@@ -71,6 +71,11 @@ public sealed class ResearchIntegrationTests : IClassFixture<SearchMcpFactory>
 
 public sealed class SearchMcpFactory : WebApplicationFactory<SearchProgram>
 {
+    public SearchMcpFactory()
+    {
+        Environment.SetEnvironmentVariable("Search__Transport", "http");
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");

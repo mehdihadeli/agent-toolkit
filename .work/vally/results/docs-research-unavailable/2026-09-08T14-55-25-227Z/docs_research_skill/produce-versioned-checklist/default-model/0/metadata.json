@@ -1,0 +1,15 @@
+{
+  "evalName": "docs_research_skill",
+  "evalFilePath": "D:\\OpenSource\\agent-toolkit\\tests\\docs-research\\vally\\eval.yaml",
+  "variant": "main",
+  "stimulusName": "produce-versioned-checklist",
+  "trialId": "D:\\OpenSource\\agent-toolkit\\tests\\docs-research\\vally\\eval.yaml::main::_::produce-versioned-checklist::trial-0",
+  "executorName": "copilot-sdk",
+  "attemptIndex": 0,
+  "startedAt": "2026-09-08T14:55:25.282Z",
+  "status": "error",
+  "error": "Could not resolve a @github/copilot platform package (tried @github/copilot-win32-x64). Ensure @github/copilot is installed, or pass cliPath/cliUrl to CopilotClient.",
+  "completedAt": "2026-09-08T14:55:25.304Z",
+  "executorSessionId": "b3d2b6f4-a74e-4052-938c-e1237284eefd",
+  "logSource": "none"
+}

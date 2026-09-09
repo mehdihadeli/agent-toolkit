@@ -7,10 +7,6 @@ environment:
       dest: Sample.cs
     - src: fixtures/Sample.csproj
       dest: Sample.csproj
-    - src: ../../../../.github/agents/dotnet-quality.agent.md
-      dest: .github/agents/dotnet-quality.agent.md
-    - src: ../../../../.github/agents/dotnet-quality.agent.md
-      dest: .claude/agents/dotnet-quality.md
 defaults:
   runs: 1
   timeout: 2m

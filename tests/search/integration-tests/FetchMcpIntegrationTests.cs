@@ -73,6 +73,11 @@ public sealed class FetchMcpIntegrationTests : IClassFixture<FetchMcpFactory>
 
 public sealed class FetchMcpFactory : WebApplicationFactory<Program>
 {
+    public FetchMcpFactory()
+    {
+        Environment.SetEnvironmentVariable("Search__Transport", "http");
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");

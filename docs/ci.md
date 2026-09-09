@@ -39,34 +39,34 @@ jobs:
 
 The `Vally lint` job:
 
-1. Installs Node.js 22 and Vally CLI 0.14.
-2. Installs GitHub Copilot CLI and exposes its executable through
-   `COPILOT_CLI_PATH`.
-3. Runs `python tools/validate_repository.py` to validate manifests, marketplace
-   paths, skill frontmatter, and local Markdown links.
-4. Runs `vally lint .` to validate skill and evaluation configuration.
+1. Installs Node.js 22 and the repository-pinned Vally CLI and Copilot CLI.
+2. Uses repository-local binaries so Vally resolves the matching Copilot
+   platform package.
+3. Runs `make validate` to validate manifests, marketplace paths, skill
+   frontmatter, and local Markdown links.
+4. Runs `make vally-lint` to validate skill and evaluation configuration.
 
 ### Evaluation job
 
 The `Run Vally evaluation suite` job starts after lint succeeds:
 
-1. Installs Vally and GitHub Copilot CLI.
+1. Installs the repository-pinned Vally CLI and GitHub Copilot CLI with
+   `npm ci`, then invokes `make vally-eval` so it uses the same command as
+   local development without depending on global npm modules.
 2. Optionally installs Claude Code and builds
    `tools/vally-executor-claude` when repository variable
    `ENABLE_CLAUDE_EVAL` equals `true`.
 3. Installs the .NET SDK selected by `global.json`.
-4. Starts the Search MCP at `http://127.0.0.1:6243` and waits for its health
-   endpoint.
-5. Runs the complete `plugin-evals` suite with Copilot through
-   `--executor copilot-sdk`.
+4. Vally launches the C# Search MCP through the named `search-mcp` stdio
+   environment in `.vally.yaml`.
+5. Runs the complete `plugin-evals` suite with `make vally-eval`.
 6. When Claude is enabled, runs the same suite sequentially through
-   `--executor claude-cli`.
-7. Stops the Search MCP, even when evaluation fails.
-8. Uploads results from `.work/vally/results/` as a workflow artifact for 14
+   `make vally-eval-claude`.
+7. Uploads results from `.work/vally/results/` as a workflow artifact for 14
    days. Copilot and Claude runs use separate result directories.
 
-One job is sufficient because both executors run sequentially and share the
-same local MCP process. Vally still requires one executor per invocation.
+One job is sufficient because both executors run sequentially. Vally launches
+the Search MCP for each evaluation through its stdio environment.
 
 ## Credentials and settings
 
@@ -74,6 +74,12 @@ Required for the default Copilot evaluation:
 
 - `COPILOT_GITHUB_TOKEN` secret, with `GITHUB_TOKEN` used as fallback.
 - `TAVILY_API_KEY` secret for search research scenarios.
+
+For Copilot SDK BYOK evaluations, the eval specs use `apiKeyEnv: OPENAI_API_KEY`
+to read the provider secret from the Vally process environment. The provider
+`baseUrl`, `model`, and `wireModel` remain explicit values in each eval spec;
+`OPENAI_BASE_URL` and `OPENAI_MODEL` are documented local settings but are not
+automatically interpolated by Vally. See the [Vally BYOK reference](https://microsoft.github.io/vally/reference/eval-spec/#executor-config--byok).
 
 Optional Claude evaluation:
 
@@ -97,8 +103,13 @@ code.
 Run static checks:
 
 ```bash
-python tools/validate_repository.py
-vally lint .
+make check
+```
+
+Run default Copilot evaluations:
+
+```bash
+make vally-eval
 ```
 
 Run .NET tests:
@@ -110,8 +121,12 @@ dotnet test --solution agent-toolkit.slnx
 Run Vally with Copilot:
 
 ```bash
-vally eval --executor copilot-sdk --suite plugin-evals --require-pass
+make vally-eval
 ```
+
+For a global Vally installation, use `make VALLY=vally vally-eval`. The
+Makefile still supplies `COPILOT_CLI_PATH` from the repository's native
+Copilot package, avoiding the Windows npm-shim resolution problem.
 
 Run Vally with Claude after building the local executor and authenticating
 Claude Code:
@@ -120,15 +135,12 @@ Claude Code:
 npm ci --prefix tools/vally-executor-claude
 npm run build --prefix tools/vally-executor-claude
 claude login
-vally eval \
-  --executor-plugin ./tools/vally-executor-claude \
-  --executor claude-cli \
-  --suite plugin-evals \
-  --require-pass
+make vally-eval-claude
 ```
 
-Search MCP evaluations require the local Search MCP and its provider
-credentials. See [plugin-eval.md](plugin-eval.md) for focused evaluations.
+Search MCP evaluations launch the local C# stdio MCP through Vally and require
+its provider credentials. See [plugin-eval.md](plugin-eval.md) for focused
+evaluations.
 
 Live Tavily SDK tests require both `TAVILY_RUN_LIVE_TESTS=1` and
 `TAVILY_API_KEY`; the manual workflow input configures the environment for

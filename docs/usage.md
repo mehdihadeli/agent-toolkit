@@ -15,7 +15,11 @@ Each entry points to a source directory under `plugins/`.
 dotnet run --project plugins/search/mcps/search/AgentSkillsMcp.Search.csproj
 ```
 
-The default local endpoint is `http://127.0.0.1:6243`. Configure Tavily enablement and `TAVILY_API_KEY` through the environment. Tavily Search and Extract are implemented by the shared SDK under `plugins/search/shared/tavily`.
+Default transport is stdio. Pass `--http`, `--transport=http`, or
+`--transport http` to host HTTP at `http://127.0.0.1:6243`. Configure Tavily
+enablement and `TAVILY_API_KEY` through the environment. Tavily Search and
+Extract are implemented by the shared SDK under
+`plugins/search/shared/tavily`.
 
 ## Run the quality agent
 

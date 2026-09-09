@@ -79,7 +79,16 @@ API key. The GitHub Actions workflow maps repository variable
 dotnet run --project AgentSkillsMcp.Search.csproj
 ```
 
-Connect an MCP client to the local HTTP endpoint:
+The default transport is stdio. Use `--http`, `--transport=http`, or
+`--transport http` to host the HTTP endpoint:
+
+```bash
+dotnet run --project AgentSkillsMcp.Search.csproj -- --http
+```
+
+`Search__Transport=http` can also select HTTP for hosted environments.
+
+Connect an MCP client to the HTTP endpoint:
 
 ```json
 {

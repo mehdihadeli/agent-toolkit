@@ -159,7 +159,7 @@ npm run build
 From repository root, run the skill and evaluation static gate:
 
 ```bash
-vally lint .
+make check
 ```
 
 Run all .NET plugin and test projects through the root solution:
@@ -170,7 +170,7 @@ dotnet test --solution agent-toolkit.slnx
 
 For skill-only changes, validate YAML frontmatter, referenced paths, Markdown diagnostics, and at least one realistic prompt. For marketplace changes, parse both marketplace JSON files and plugin manifests. Run a relevant evaluation when behavior or skill instructions change.
 
-The GitHub Actions evaluation workflow runs `vally lint`, then executes `vally eval --suite plugin-evals` from root `.vally.yaml`. Vally discovers all nested plugin `eval.yaml` files through the suite definition. This workflow also starts the local search MCP before running the suite because the repository currently includes MCP-backed evals. .NET unit and integration projects run separately in `.github/workflows/dotnet-tests.yml`. Configure repository secret `COPILOT_GITHUB_TOKEN` for Copilot-backed evaluations; MCP research evaluations may also require provider secrets.
+The GitHub Actions evaluation workflow runs `vally lint`, then executes `vally eval --suite plugin-evals` from root `.vally.yaml`. Vally discovers all nested plugin `eval.yaml` files through the suite definition and launches the C# Search MCP through its named stdio environment. .NET unit and integration projects run separately in `.github/workflows/dotnet-tests.yml`. Configure repository secret `COPILOT_GITHUB_TOKEN` for Copilot-backed evaluations; MCP research evaluations may also require provider secrets.
 
 ## Testing strategy
 
@@ -219,11 +219,13 @@ tests/
 
 This repository uses [Vally](https://microsoft.github.io/vally/) to lint skills and organize agent evaluations. `.vally.yaml` is the project-level configuration; keep skill and evaluation paths aligned with the repository structure.
 
-Vally requires Node.js 22.12 or newer. Install the CLI when needed and run the static gate from repository root:
+When authoring or running Vally evaluations, use the [Vally reference guide](https://microsoft.github.io/vally/reference) for the current eval schema, executor configuration, BYOK provider settings, CLI commands, and grader options.
+
+Vally requires Node.js 22.12 or newer. Install repository dependencies and run the static gate from repository root:
 
 ```bash
-npm install -g @microsoft/vally-cli
-vally lint .
+npm ci
+make check
 ```
 
 Each Vally evaluation suite is represented by one `eval.yaml` under `tests/<plugin>/vally/`. Specs use Vally's native `stimuli`/`graders` format. Supporting fixtures may live beside the spec; do not add separate test projects or new `plugin`/`kind`/`cases` metadata for skills.
@@ -231,12 +233,7 @@ Each Vally evaluation suite is represented by one `eval.yaml` under `tests/<plug
 The Claude executor is optional and requires Claude Code authentication:
 
 ```bash
-vally eval \
-	--executor-plugin ./tools/vally-executor-claude \
-	--executor claude-cli \
-	--eval-spec tests/docs-research/vally/eval.yaml \
-	--runs 1 --workers 1 --verbose \
-	--output-dir .work/vally/results/claude
+make vally-eval-claude
 ```
 
 For Copilot evaluations, use Vally's `copilot-sdk` executor without the Claude executor plugin.

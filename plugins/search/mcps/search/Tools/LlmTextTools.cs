@@ -5,7 +5,8 @@ public sealed class LlmTextTools(FetchTools fetchTools)
 {
     [McpServerTool(Name = "discover_llms_txt")]
     [Description(
-        "Discover and fetch a site's /llms.txt metadata as AI-readable Markdown. Requests use GET only."
+        "Discover and fetch a site's llms.txt metadata as AI-readable Markdown. "
+            + "Pass either the site URL or the exact llms.txt URL. Requests use GET only."
     )]
     public async Task<string> DiscoverAsync(
         [Description("Public HTTP or HTTPS site URL.")] string url,
@@ -20,11 +21,12 @@ public sealed class LlmTextTools(FetchTools fetchTools)
             throw new ArgumentException("url must be an absolute HTTP or HTTPS URL.", nameof(url));
         }
 
-        var candidates = new[]
-        {
-            new Uri(siteUri, "/llms.txt"),
-            new Uri(siteUri, "/.well-known/llms.txt"),
-        };
+        var candidates = siteUri.AbsolutePath.EndsWith(
+            "/llms.txt",
+            StringComparison.OrdinalIgnoreCase
+        )
+            ? new[] { siteUri }
+            : new[] { new Uri(siteUri, "/llms.txt"), new Uri(siteUri, "/.well-known/llms.txt") };
 
         foreach (var candidate in candidates)
         {

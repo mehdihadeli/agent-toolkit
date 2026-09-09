@@ -1,12 +1,19 @@
 # Vally Claude Code Executor
 
-Custom Vally executor for running the repository's eval specs through Claude Code CLI. It complements Vally's built-in `copilot-sdk` executor; Vally runs one executor per invocation.
+Custom Vally executor that runs repository eval specs through the Claude Code CLI. It complements Vally's built-in `copilot-sdk` executor; Vally runs one executor per invocation.
 
 ## Requirements
 
 - Node.js 22.12 or newer
 - Vally CLI 0.14.x
-- Claude Code CLI installed and authenticated with `claude login`
+- Claude Code CLI installed and available as `claude`
+- Claude provider credentials exported in the shell or CI job that runs `vally`
+
+Check the CLI installation before running an eval:
+
+```bash
+claude --version
+```
 
 ## Build
 
@@ -17,19 +24,146 @@ npm run build
 cd ../..
 ```
 
-## Run an evaluation
+## Configure the Provider
 
-From repository root:
+Provider credentials follow [Vally's BYOK convention](https://microsoft.github.io/vally/reference/eval-spec/#executor-config--byok): configuration stores an
+environment-variable name, never a literal secret. The variable is read from
+the environment of the `vally` process when each trial starts.
 
-```bash
-vally eval \
-  --executor-plugin ./tools/vally-executor-claude \
-  --executor claude-cli \
-  --eval-spec tests/evaluation/skills/docs-research/eval.yaml \
-  --runs 1 --workers 1 --verbose \
-  --output-dir .work/vally/results/claude
+The local wrapper also exports standard variables from `.env` directly. Claude
+Code consumes `ANTHROPIC_BASE_URL`, `ANTHROPIC_MODEL`, and
+`ANTHROPIC_API_KEY` from that inherited process environment. This lets a Claude
+eval receive all three values from `.env`:
+
+```yaml
+defaults:
+  executor: claude-cli
 ```
 
-The executor invokes `claude --print --verbose --output-format stream-json`, stages MCP configuration when an eval declares MCP servers, and translates Claude messages, tool calls, tool results, token usage, and timeouts into Vally trajectory events.
+With this form, `ANTHROPIC_MODEL` selects the model, while
+`ANTHROPIC_BASE_URL` and `ANTHROPIC_API_KEY` configure Claude Code. The
+executor-level `model` or Vally `defaults.model` overrides `ANTHROPIC_MODEL`
+when explicitly provided.
 
-For Copilot, run the same eval without this plugin and use `--executor copilot-sdk`.
+An optional provider block applies Vally-style validation and supports a
+different credential variable name:
+
+```bash
+export ANTHROPIC_API_KEY="..."
+```
+
+```yaml
+defaults:
+  executor:
+    name: claude-cli
+    config:
+      provider:
+        apiKeyEnv: ANTHROPIC_API_KEY
+```
+
+Supported provider fields are `baseUrl`, `apiKeyEnv`, and `bearerTokenEnv`.
+`bearerTokenEnv` takes precedence over `apiKeyEnv`; if both are set, the API-key
+variable is not read. A configured but unset variable fails that trial.
+
+`agent_environment.env` is applied only to the spawned Claude process. It is not
+used to resolve `apiKeyEnv` or `bearerTokenEnv`:
+
+```yaml
+agent_environment:
+  env:
+    # Visible to Claude, but not used for Vally provider lookup.
+    LOG_LEVEL: debug
+```
+
+For local development, use the repository Make target to load an ignored `.env`
+file before Vally starts. For CI, use the CI secret/environment mechanism. The
+executor itself does not search parent directories, read `.env` files, or read
+Claude settings files.
+
+## Run an Evaluation
+
+Run local evaluations from repository root. These targets load the root `.env`
+before starting Vally:
+
+```bash
+make vally-eval-claude-local VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml
+make vally-eval-copilot-local VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml
+```
+
+CI evaluations use exported job variables and do not load `.env`:
+
+```bash
+make vally-eval-claude-ci VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml
+make vally-eval-copilot-ci VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml
+```
+
+`vally-eval` and `vally-eval-copilot` remain aliases for the local Copilot
+target. `vally-eval-claude` and `vally-eval-claude-cli` remain aliases for the
+local Claude target.
+
+The Make targets support `VALLY_ENV_FILE`, `VALLY_RUNS`, `VALLY_WORKERS`,
+`VALLY_EVAL_SPEC`, and `VALLY_SUITE` overrides. Locally, the internal wrapper
+reads `.env` by default; in CI, it uses exported job variables and does not
+require a `.env` file. It fails before Vally starts when the executor has no
+usable credential:
+
+- Claude: `ANTHROPIC_API_KEY` or `ANTHROPIC_AUTH_TOKEN`
+- Copilot: `COPILOT_GITHUB_TOKEN` or `OPENAI_API_KEY`
+
+`ANTHROPIC_BASE_URL`, `ANTHROPIC_MODEL`, `OPENAI_BASE_URL`, and
+`OPENAI_MODEL` are optional and are passed through when set.
+
+The executor invokes:
+
+```text
+claude --print --verbose --output-format stream-json
+```
+
+It stages MCP configuration when an eval declares MCP servers and translates Claude messages, tool calls, tool results, token usage, errors, and timeouts into Vally trajectory events.
+
+## Executor Options
+
+Supported executor configuration keys:
+
+- `command`: Claude CLI executable; defaults to `claude`.
+- `provider`: Provider configuration with `baseUrl`, `apiKeyEnv`, or `bearerTokenEnv`.
+- `permissionMode`: Claude permission mode; defaults to `acceptEdits`.
+- `allowDangerouslySkipPermissions`: Adds Claude's dangerous permission flags when `true`.
+- `maxBudgetUsd`: Positive maximum spend passed to Claude Code.
+- `extraArgs`: Additional Claude CLI arguments.
+
+Use `allowDangerouslySkipPermissions` only in an isolated, disposable evaluation environment.
+
+## Test
+
+Run the build and Jest suite:
+
+```bash
+npm test --prefix tools/vally-executor-claude
+```
+
+Tests use in-memory environment maps and do not read real user credentials.
+
+## Copilot Comparison
+
+The built-in `copilot-sdk` executor uses the same Vally process-environment rule
+for its BYOK provider block:
+
+```yaml
+defaults:
+  model: qwen3
+  executor:
+    name: copilot-sdk
+    config:
+      provider:
+        baseUrl: http://localhost:11434/v1
+        apiKeyEnv: OLLAMA_KEY
+```
+
+Export `OLLAMA_KEY` before running `vally`; do not put the secret in
+`agent_environment.env`. A variant can override `/defaults/executor` and
+`/defaults/model` to compare this provider with another executor. A variant
+without `config.provider` uses the executor's normal authentication chain.
+
+For a plain Copilot eval, run the same spec without this plugin and use
+`--executor copilot-sdk`.

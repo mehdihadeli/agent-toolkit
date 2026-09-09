@@ -17,7 +17,9 @@ stimuli:
       Read task.md and use the docs-research skill. Research the current Vally
       documentation approach for this task. Return exactly these headings:
       What changed, What matters for this repo, Implementation checklist,
-      Risks/unknowns. Include official source URLs and do not invent unknowns.
+      Risks/unknowns. Include at least one official source URL containing the
+      literal prefix https://microsoft.github.io/vally and do not invent
+      unknowns.
     graders:
       - type: output-contains
         name: checklist headings
@@ -28,6 +30,34 @@ stimuli:
         name: source citation
         config:
           substring: microsoft.github.io/vally
+          case_sensitive: false
+    constraints:
+      max_turns: 8
+      max_tokens: 4000
+      expect_skills: [docs-research]
+  - name: recommend-missing-research-tools
+    prompt: |
+      Read task.md and use the docs-research skill. This environment does not
+      provide a configured documentation research MCP. Explain which useful
+      research tools are unavailable, recommend installation or configuration
+      steps for a suitable tool, and do not claim that you used a tool that is
+      unavailable. Include the literal word `unavailable` in the response.
+      Return the standard four headings from the skill.
+    graders:
+      - type: output-contains
+        name: identifies unavailable tools
+        config:
+          substring: unavailable
+          case_sensitive: false
+      - type: output-contains
+        name: recommends setup
+        config:
+          substring: install
+          case_sensitive: false
+      - type: output-contains
+        name: includes risks
+        config:
+          substring: Risks/unknowns
           case_sensitive: false
     constraints:
       max_turns: 8

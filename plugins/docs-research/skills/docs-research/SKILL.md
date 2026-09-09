@@ -15,6 +15,17 @@ When the current coding task depends on external documentation:
 6. Cite the source for every critical constraint. Include page title and URL when available.
 7. Call out unknowns, conflicting sources, and assumptions explicitly. Do not guess undocumented behavior.
 
+## Research tools
+
+Use available research tools in this order:
+
+1. Use an already configured repository MCP such as `agent-toolkit-search` when it provides the needed retrieval capability.
+2. Use installed official-documentation tools such as Microsoft Learn or Context7 when they cover the target technology.
+3. If a configured local tool is not running, start it using the repository's documented command before falling back to another source.
+4. If no suitable tool is available, tell the user which tool would help and provide its installation or configuration steps. Do not install packages, start services, or request credentials without user or environment authorization.
+
+Use primary documentation first. Combine tools when one provides discovery and another provides authoritative source content. Record which tools were used and identify any unavailable or unverified source.
+
 Output format:
 
 ## What changed

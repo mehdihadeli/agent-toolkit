@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="2" failures="0" errors="2" skipped="0" time="0.042">
+  <testsuite name="docs_research_skill" tests="2" failures="0" errors="2" skipped="0" time="0.042">
+    <properties>
+      <property name="evalName" value="docs_research_skill"/>
+      <property name="evalFilePath" value="D:\OpenSource\agent-toolkit\tests\docs-research\vally\eval.yaml"/>
+      <property name="executor" value="copilot-sdk"/>
+      <property name="workers" value="1"/>
+      <property name="runs" value="1"/>
+      <property name="overallScore" value="0"/>
+      <property name="threshold" value="0.8"/>
+      <property name="passed" value="false"/>
+      <property name="stimuliRun" value="2"/>
+      <property name="stimuliTotal" value="2"/>
+      <property name="durationMs" value="42"/>
+    </properties>
+    <testcase name="produce-versioned-checklist" classname="docs_research_skill" time="0.029">
+      <error message="Could not resolve a @github/copilot platform package (tried @github/copilot-win32-x64). Ensure @github/copilot is installed, or pass cliPath/cliUrl to CopilotClient." type="ExecutionError"><![CDATA[Could not resolve a @github/copilot platform package (tried @github/copilot-win32-x64). Ensure @github/copilot is installed, or pass cliPath/cliUrl to CopilotClient.]]></error>
+    </testcase>
+    <testcase name="recommend-missing-research-tools" classname="docs_research_skill" time="0.013">
+      <error message="Could not resolve a @github/copilot platform package (tried @github/copilot-win32-x64). Ensure @github/copilot is installed, or pass cliPath/cliUrl to CopilotClient." type="ExecutionError"><![CDATA[Could not resolve a @github/copilot platform package (tried @github/copilot-win32-x64). Ensure @github/copilot is installed, or pass cliPath/cliUrl to CopilotClient.]]></error>
+    </testcase>
+  </testsuite>
+</testsuites>

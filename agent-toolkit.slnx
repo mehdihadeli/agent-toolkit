@@ -7,7 +7,6 @@
   <Folder Name="/plugins/search/shared/" />
   <Folder Name="/plugins/search/mcps/" />
   <Folder Name="/plugins/search/mcps/search/">
-    <Project Path="plugins/search/mcps/search/AgentSkillsMcp.Fetch.csproj" />
     <Project Path="plugins/search/mcps/search/AgentSkillsMcp.Search.csproj" />
   </Folder>
   <Folder Name="/plugins/search/shared/tavily/">
