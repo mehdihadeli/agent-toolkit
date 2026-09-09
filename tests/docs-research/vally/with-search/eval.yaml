@@ -8,10 +8,11 @@ environment:
     agent-toolkit-search:
       type: stdio
       command: dotnet
+      cwd: ../../../../
       args:
         - run
         - --project
-        - ../../../../plugins/search/mcps/search/AgentSkillsMcp.Search.csproj
+        - plugins/search/mcps/search/AgentSkillsMcp.Search.csproj
         - --no-launch-profile
   files:
     - src: ../fixtures/task.md
@@ -28,7 +29,8 @@ stimuli:
       find relevant official Vally documentation, then return exactly these
       headings: What changed, What matters for this repo, Implementation
       checklist, Risks/unknowns. State which research tool you used and include
-      an official source URL. Do not claim tool use if it was unavailable.
+      the literal URL https://microsoft.github.io/vally as an official source.
+      Do not claim tool use if it was unavailable.
     graders:
       - type: output-contains
         name: reports search tool use

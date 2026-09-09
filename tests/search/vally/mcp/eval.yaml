@@ -10,10 +10,11 @@ environment:
     agent-toolkit-search:
       type: stdio
       command: dotnet
+      cwd: ../../../../
       args:
         - run
         - --project
-        - ../../../plugins/search/mcps/search/AgentSkillsMcp.Search.csproj
+        - plugins/search/mcps/search/AgentSkillsMcp.Search.csproj
         - --no-launch-profile
       timeout: 30s
 defaults:
@@ -26,11 +27,12 @@ stimuli:
       priority: p0
       cost: low
     prompt: |
-      Use the agent-toolkit-search MCP fetch tool to fetch
+      Call only the agent-toolkit-search MCP tool named fetch now, with url
       https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-10/overview
-      as readable text. Report the document title and one practical change or
-      feature described in the .NET 10 documentation. Include the official
-      Microsoft Learn URL. Do not modify files.
+      and format readable. Wait for the fetch result. Report the document title
+      and one practical change or feature described in the .NET 10
+      documentation. Include the official Microsoft Learn URL. Do not modify
+      files.
     graders:
       - type: completed
       - type: output-contains
@@ -55,9 +57,10 @@ stimuli:
       priority: p1
       cost: high
     prompt: |
-      Use the agent-toolkit-search MCP research tool to research "what is HTTP" and
-      return a concise answer with cited source links. Do not use uncited
-      general knowledge when the tool returns no sources.
+      Call only the agent-toolkit-search MCP tool named research now with question
+      "what is HTTP". Wait for the research result, then return a concise
+      answer with cited source links. Include the word HTTP in the answer. Do
+      not use uncited general knowledge when the tool returns no sources.
     graders:
       - type: completed
       - type: output-contains
@@ -78,10 +81,10 @@ stimuli:
       priority: p1
       cost: high
     prompt: |
-      Use the agent-toolkit-search MCP search tool to find official Microsoft
-      Learn documentation about what's new in .NET 10. Return two relevant
-      result titles with their source URLs. Prefer learn.microsoft.com sources
-      and do not invent results.
+      Call only the agent-toolkit-search MCP tool named search now with query
+      "what's new in .NET 10". Wait for the search result, then return two
+      relevant result titles with their source URLs. Prefer learn.microsoft.com
+      sources and do not invent results.
     graders:
       - type: completed
       - type: output-contains
@@ -102,12 +105,12 @@ stimuli:
       priority: p1
       cost: high
     prompt: |
-      Use the agent-toolkit-search MCP crawl tool to crawl this Microsoft Learn
+      Call only the agent-toolkit-search MCP tool named crawl now with url
       .NET 10 overview page:
       https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-10/overview
-      Call crawl with max_pages=1 and max_depth=0. Report the page heading plus
-      one .NET 10 feature found in the returned content. Do not leave the
-      Microsoft Learn origin.
+      and arguments max_pages=1 and max_depth=0. Wait for the crawl result.
+      Report the page heading plus one .NET 10 feature found in returned
+      content. Do not leave the Microsoft Learn origin.
     graders:
       - type: completed
       - type: output-contains
@@ -128,10 +131,10 @@ stimuli:
       priority: p0
       cost: low
     prompt: |
-      Call MCP tool discover_llms_txt with url
+      Call only the agent-toolkit-search MCP tool named discover_llms_txt now with url
       https://agentgateway.dev/docs/llms.txt. Then summarize the returned
-      agentgateway documentation and include its source URL. Use the tool result
-      as your source.
+      agentgateway documentation and include its source URL. Wait for the tool
+      result and use it as your source.
     graders:
       - type: completed
       - type: output-contains

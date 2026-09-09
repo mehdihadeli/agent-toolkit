@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import type {
   Executor,
@@ -304,7 +304,44 @@ export class ClaudeCliExecutor implements Executor {
   ): Promise<string> {
     const directory = await mkdtemp(join(tmpdir(), "vally-claude-"));
     const path = join(directory, "mcp.json");
-    await writeFile(path, JSON.stringify({ mcpServers: servers }), "utf8");
+    const mcpServers = Object.fromEntries(
+      Object.entries(servers).map(([name, server]) => {
+        if (server === null) return [name, server];
+
+        const serverRecord = server as unknown as Record<string, unknown>;
+        const {
+          type: _type,
+          timeout: _timeout,
+          cwd,
+          args,
+          ...claudeServer
+        } = serverRecord;
+        const serverCwd = typeof cwd === "string" ? cwd : undefined;
+        const serverArgs = Array.isArray(args)
+          ? args.filter(
+              (argument): argument is string => typeof argument === "string",
+            )
+          : undefined;
+        const normalizedArgs = serverCwd
+          ? serverArgs?.map((argument: string, index: number) =>
+              (index > 0 && serverArgs[index - 1] === "--project") ||
+              argument.endsWith(".csproj")
+                ? isAbsolute(argument)
+                  ? argument
+                  : resolve(serverCwd, argument)
+                : argument,
+            )
+          : serverArgs;
+        return [
+          name,
+          {
+            ...claudeServer,
+            ...(normalizedArgs ? { args: normalizedArgs } : {}),
+          },
+        ];
+      }),
+    );
+    await writeFile(path, JSON.stringify({ mcpServers }), "utf8");
     return path;
   }
 
