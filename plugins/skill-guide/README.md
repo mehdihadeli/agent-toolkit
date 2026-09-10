@@ -13,7 +13,7 @@ Use when designing, organizing, authoring, or validating agent skills. It covers
 The skill is evaluated through the repository-level Vally suite:
 
 ```bash
-make vally-eval-copilot-local VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml
+VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml mise run vally-eval-copilot-local
 ```
 
 The evaluation covers both skill authoring guidance and validation/safety

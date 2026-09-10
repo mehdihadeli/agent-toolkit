@@ -1,0 +1,76 @@
+[env]
+VALLY = "node ./node_modules/@microsoft/vally-cli/dist/index.js"
+VALLY_EVAL_RUNNER = "./tools/run-vally.sh"
+VALLY_SUITE = "plugin-evals"
+VALLY_WORKERS = "1"
+VALLY_RUNS = "1"
+VALLY_PROCESSES = "1"
+
+[tools]
+node = "22.12"
+
+[tasks.install]
+description = "Install pinned repository dependencies"
+run = "npm ci"
+
+[tasks.validate]
+description = "Validate repository metadata, paths, and links"
+run = "python tools/validate_repository.py"
+
+[tasks.vally-lint]
+description = "Lint skills and Vally evaluation configuration"
+run = "node ./node_modules/@microsoft/vally-cli/dist/index.js lint ."
+
+[tasks.vally-eval]
+description = "Run the complete Vally suite with Copilot and Claude"
+run = "bash -c 'copilot_status=0; mise run vally-eval-copilot-local || copilot_status=$?; claude_status=0; mise run vally-eval-claude-local || claude_status=$?; exit $((copilot_status || claude_status))'"
+
+[tasks.vally-eval-copilot]
+description = "Run the local Copilot evaluation"
+depends = ["vally-eval-copilot-local"]
+run = "true"
+
+[tasks.vally-preflight-copilot-local]
+description = "Check local Copilot evaluation credentials and executable"
+run = "bash -c 'VALLY_PREFLIGHT_ONLY=1 VALLY_PREFLIGHT_API=1 ./tools/run-vally.sh copilot-sdk local'"
+
+[tasks.vally-preflight-copilot-ci]
+description = "Check CI Copilot evaluation credentials and executable"
+run = "bash -c 'VALLY_PREFLIGHT_ONLY=1 VALLY_PREFLIGHT_API=1 ./tools/run-vally.sh copilot-sdk ci'"
+
+[tasks.vally-eval-copilot-local]
+description = "Run local Vally evaluations with Copilot"
+depends = ["vally-preflight-copilot-local"]
+run = "bash ./tools/run-vally.sh copilot-sdk local"
+
+[tasks.vally-eval-copilot-ci]
+description = "Run CI Vally evaluations with Copilot"
+depends = ["vally-preflight-copilot-ci"]
+run = "bash ./tools/run-vally.sh copilot-sdk ci"
+
+[tasks.vally-eval-claude]
+description = "Run the local Claude evaluation"
+depends = ["vally-eval-claude-local"]
+run = "true"
+
+[tasks.vally-eval-claude-cli]
+description = "Run the local Claude evaluation"
+depends = ["vally-eval-claude-local"]
+run = "true"
+
+[tasks.vally-eval-claude-local]
+description = "Run local Vally evaluations with Claude"
+run = "bash ./tools/run-vally.sh claude-cli local"
+
+[tasks.vally-eval-claude-default-local]
+description = "Run local Claude evaluations using the spec default executor"
+run = "bash ./tools/run-vally.sh claude-cli-default local"
+
+[tasks.vally-eval-claude-ci]
+description = "Run CI Vally evaluations with Claude"
+run = "bash ./tools/run-vally.sh claude-cli ci"
+
+[tasks.check]
+description = "Run repository validation and Vally lint"
+depends = ["validate", "vally-lint"]
+run = "true"

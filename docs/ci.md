@@ -39,31 +39,31 @@ jobs:
 
 The `Vally lint` job:
 
-1. Installs Node.js 22 and the repository-pinned Vally CLI and Copilot CLI.
+1. Installs mise, Node.js 22, and the repository-pinned Vally CLI and Copilot CLI.
 2. Uses repository-local binaries so Vally resolves the matching Copilot
    platform package.
-3. Runs `make validate` to validate manifests, marketplace paths, skill
+3. Runs `mise run validate` to validate manifests, marketplace paths, skill
    frontmatter, and local Markdown links.
-4. Runs `make vally-lint` to validate skill and evaluation configuration.
+4. Runs `mise run vally-lint` to validate skill and evaluation configuration.
 
 ### Evaluation job
 
 The `Run Vally evaluation suite` job starts after lint succeeds:
 
 1. Installs the repository-pinned Vally CLI and GitHub Copilot CLI with
-   `npm ci`, then invokes `make vally-eval` so it uses the same command as
+   `npm ci`, then invokes `mise run vally-eval` so it uses the same command as
    local development without depending on global npm modules.
 1. Installs the repository-pinned Vally CLI and Copilot CLI with
-   `npm ci`, then invokes `make vally-eval-copilot-ci` without depending on
+   `npm ci`, then invokes `mise run vally-eval-copilot-ci` without depending on
    global npm modules.
 1. Installs the .NET SDK selected by `global.json`.
 1. Vally launches the C# Search MCP through the named `search-mcp` stdio
    environment in `.vally.yaml`.
-1. Runs the complete `plugin-evals` suite with `make vally-eval-copilot-ci`.
+1. Runs the complete `plugin-evals` suite with `mise run vally-eval-copilot-ci`.
    CI executes each eval file one at a time, continues after individual eval
    failures to collect the full report, and fails the job when any eval fails.
 1. When Claude is enabled, runs the same suite sequentially through
-   `make vally-eval-claude`.
+   `mise run vally-eval-claude`.
 1. Uploads results from `.work/vally/results/` as a workflow artifact for 14
    days. Copilot and Claude runs use separate result directories.
 
@@ -119,16 +119,16 @@ code.
 Run static checks:
 
 ```bash
-make check
+mise run check
 ```
 
 Run default Copilot evaluations:
 
 ```bash
-make vally-eval-copilot-ci
+mise run vally-eval-copilot-ci
 ```
 
-For local evaluation with both executors, use `make vally-eval`. It runs all
+For local evaluation with both executors, use `mise run vally-eval`. It runs all
 Copilot evals followed by all Claude Code evals and reports failure after both
 runs complete.
 
@@ -141,12 +141,13 @@ dotnet test --solution agent-toolkit.slnx
 Run Vally with Copilot:
 
 ```bash
-make vally-eval
+mise run vally-eval
 ```
 
-For a global Vally installation, use `make VALLY=vally vally-eval`. The
-Makefile still supplies `COPILOT_CLI_PATH` from the repository's native
-Copilot package, avoiding the Windows npm-shim resolution problem.
+For a global Vally installation, set `VALLY=vally` before running
+`mise run vally-eval`. The task still supplies `COPILOT_CLI_PATH` from the
+repository's native Copilot package, avoiding the Windows npm-shim resolution
+problem.
 
 Run Vally with Claude after building the local executor and authenticating
 Claude Code:
@@ -155,7 +156,7 @@ Claude Code:
 npm ci
 npm run build --prefix tools/vally-executor-claude
 claude login
-make vally-eval-claude
+mise run vally-eval-claude
 ```
 
 Search MCP evaluations launch the local C# stdio MCP through Vally and require

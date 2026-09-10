@@ -211,7 +211,7 @@ npm run build
 From repository root, run the skill and evaluation static gate:
 
 ```bash
-make check
+mise run check
 ```
 
 Run all .NET plugin and test projects through the root solution:
@@ -277,7 +277,7 @@ Vally requires Node.js 22.12 or newer. Install repository dependencies and run t
 
 ```bash
 npm ci
-make check
+mise run check
 ```
 
 Each Vally evaluation suite is represented by one `eval.yaml` under `tests/<plugin>/vally/`. Specs use Vally's native `stimuli`/`graders` format. Supporting fixtures may live beside the spec; do not add separate test projects or new `plugin`/`kind`/`cases` metadata for skills.
@@ -285,7 +285,7 @@ Each Vally evaluation suite is represented by one `eval.yaml` under `tests/<plug
 The Claude executor is optional and requires Claude Code authentication:
 
 ```bash
-make vally-eval-claude
+mise run vally-eval-claude
 ```
 
 For Copilot evaluations, use Vally's `copilot-sdk` executor without the Claude executor plugin.

@@ -9,9 +9,10 @@ Each capability lives inside its owning plugin. Claude Code and Codex discover p
 Install repository dependencies and run static validation:
 
 ```bash
+mise install
 npm ci
-make validate
-make vally-lint
+mise run validate
+mise run vally-lint
 ```
 
 Run all .NET tests:
@@ -23,14 +24,14 @@ dotnet test --solution agent-toolkit.slnx
 Run the complete prompt-evaluation suite with GitHub Copilot:
 
 ```bash
-make vally-eval-copilot-local
+mise run vally-eval-copilot-local
 ```
 
 Claude Code evaluations use the local Claude executor and require Claude authentication and provider configuration:
 
 ```bash
 npm run build --prefix tools/vally-executor-claude
-make vally-eval-claude-local
+mise run vally-eval-claude-local
 ```
 
 See [docs/usage.md](docs/usage.md), [docs/plugin-eval.md](docs/plugin-eval.md), and [docs/ci.md](docs/ci.md) for local and CI workflows.

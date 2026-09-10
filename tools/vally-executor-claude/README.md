@@ -96,7 +96,7 @@ agent_environment:
     LOG_LEVEL: debug
 ```
 
-For local development, use the repository Make target to load an ignored `.env`
+For local development, use the repository mise task to load an ignored `.env`
 file before Vally starts. For CI, use the CI secret/environment mechanism. The
 executor itself does not search parent directories, read `.env` files, or read
 Claude settings files.
@@ -132,7 +132,7 @@ defaults:
    CLI invocation. These options change how Claude runs; they do not load
    provider values from YAML environment-variable names.
 
-The Make targets load `.env` before Vally starts. The explicit target
+The mise tasks load `.env` before Vally starts. The explicit task
 `vally-eval-claude-local` passes `--executor claude-cli`; the
 `vally-eval-claude-default-local` target omits that flag and lets
 `defaults.executor` select the custom executor.
@@ -143,22 +143,22 @@ Run local evaluations from repository root. These targets load the root `.env`
 before starting Vally:
 
 ```bash
-make vally-eval-claude-local VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml
-make vally-eval-copilot-local VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml
+VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml mise run vally-eval-claude-local
+VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml mise run vally-eval-copilot-local
 ```
 
 CI evaluations use exported job variables and do not load `.env`:
 
 ```bash
-make vally-eval-claude-ci VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml
-make vally-eval-copilot-ci VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml
+VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml mise run vally-eval-claude-ci
+VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml mise run vally-eval-copilot-ci
 ```
 
 `vally-eval` and `vally-eval-copilot` remain aliases for the local Copilot
 target. `vally-eval-claude` and `vally-eval-claude-cli` remain aliases for the
 local Claude target.
 
-The Make targets support `VALLY_ENV_FILE`, `VALLY_RUNS`, `VALLY_WORKERS`,
+The mise tasks support `VALLY_ENV_FILE`, `VALLY_RUNS`, `VALLY_WORKERS`,
 `VALLY_EVAL_SPEC`, and `VALLY_SUITE` overrides. Locally, the internal wrapper
 reads `.env` by default; in CI, it uses exported job variables and does not
 require a `.env` file. It fails before Vally starts when the executor has no

@@ -10,7 +10,7 @@ on:
       - "tools/**"
       - "package.json"
       - "package-lock.json"
-      - "Makefile"
+      - "mise.toml"
       - ".vally.yaml"
       - "global.json"
       - ".github/workflows/evaluation*.yml"
@@ -21,7 +21,7 @@ on:
       - "tools/**"
       - "package.json"
       - "package-lock.json"
-      - "Makefile"
+      - "mise.toml"
       - ".vally.yaml"
       - "global.json"
       - ".github/workflows/evaluation*.yml"
@@ -51,14 +51,17 @@ jobs:
         with:
           node-version: 22
 
+      - name: Setup mise
+        uses: jdx/mise-action@v2
+
       - name: Install repository Node dependencies
         run: npm ci
 
       - name: Validate repository metadata and links
-        run: make validate
+        run: mise run validate
 
       - name: Lint skills and evaluation configuration
-        run: make vally-lint
+        run: mise run vally-lint
 
   evaluate:
     name: Run Vally evaluation suite
@@ -85,6 +88,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Setup mise
+        uses: jdx/mise-action@v2
+
       - name: Install repository Node dependencies
         run: npm ci
 
@@ -99,10 +105,10 @@ jobs:
           global-json-file: global.json
 
       - name: Run Vally evaluation with Copilot
-        run: make vally-eval-copilot-ci
+        run: mise run vally-eval-copilot-ci
 
       - name: Run Vally evaluation with Claude Code
-        run: make vally-eval-claude-ci
+        run: mise run vally-eval-claude-ci
 
       - name: Upload evaluation results
         if: always()
