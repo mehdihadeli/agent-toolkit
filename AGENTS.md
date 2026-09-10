@@ -92,8 +92,8 @@ plugins/
 │   └── agents/dotnet-quality-agent/  .NET quality agent
 ├── docs-research/
 │   └── skills/docs-research/    documentation research skill
-└── skill-guide/
-	└── skills/skill-guide/      skill authoring guidance
+├── skill-guide/
+│   └── skills/skill-guide/      skill authoring guidance
 ```
 
 Keep plugin source inside its plugin directory. Register each distributable plugin in both marketplace files, and keep its Claude and Codex manifests aligned on name and version. Do not add empty placeholder directories or duplicate source under host metadata.
