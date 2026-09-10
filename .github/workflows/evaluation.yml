@@ -101,7 +101,7 @@ jobs:
         with:
           global-json-file: global.json
 
-      - name: Run Vally evaluation
+      - name: Run Vally evaluation with Copilot
         run: make vally-eval-copilot-ci
 
       - name: Run Vally evaluation with Claude Code

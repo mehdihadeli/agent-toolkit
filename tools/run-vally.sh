@@ -47,16 +47,6 @@ case "$EXECUTOR" in
       printf 'One Copilot credential is required: COPILOT_GITHUB_TOKEN or OPENAI_API_KEY\n' >&2
       exit 1
     fi
-    if [[ -n "${OPENAI_API_KEY:-}" ]]; then
-      if [[ -z "${OPENAI_BASE_URL:-}" || -z "${OPENAI_MODEL:-}" ]]; then
-        printf 'BYOK requires OPENAI_BASE_URL and OPENAI_MODEL when OPENAI_API_KEY is set\n' >&2
-        exit 1
-      fi
-      if [[ ! "$OPENAI_BASE_URL" =~ ^https?:// ]]; then
-        printf 'OPENAI_BASE_URL must be an absolute http(s) URL\n' >&2
-        exit 1
-      fi
-    fi
     ;;
   claude-cli|claude-cli-default)
     if [[ -z "${ANTHROPIC_API_KEY:-}" && -z "${ANTHROPIC_AUTH_TOKEN:-}" ]]; then
@@ -72,22 +62,13 @@ case "$EXECUTOR" in
 esac
 
 if [[ "$EXECUTOR" == "copilot-sdk" ]]; then
-  printf 'Copilot preflight: mode=%s, model=%s, base=%s, OPENAI_API_KEY=%s, COPILOT_GITHUB_TOKEN=%s\n' \
+  printf 'Copilot preflight: mode=%s, OPENAI_API_KEY=%s, COPILOT_GITHUB_TOKEN=%s\n' \
     "$MODE" \
-    "${OPENAI_MODEL:-default}" \
-    "${OPENAI_BASE_URL:-default}" \
     "$(if [[ -n "${OPENAI_API_KEY:-}" ]]; then printf present; else printf absent; fi)" \
     "$(if [[ -n "${COPILOT_GITHUB_TOKEN:-}" ]]; then printf present; else printf absent; fi)"
   if [[ -n "${COPILOT_CLI_PATH:-}" && ! -f "$COPILOT_CLI_PATH" ]]; then
     printf 'COPILOT_CLI_PATH does not exist: %s\n' "$COPILOT_CLI_PATH" >&2
     exit 1
-  fi
-  if [[ "${VALLY_PREFLIGHT_API:-0}" == "1" && -n "${OPENAI_API_KEY:-}" ]]; then
-    printf 'Copilot preflight: checking provider endpoint...\n'
-    curl --fail --silent --show-error --max-time 15 \
-      -H "Authorization: Bearer $OPENAI_API_KEY" \
-      "${OPENAI_BASE_URL%/}/models" >/dev/null
-    printf 'Copilot preflight: provider endpoint passed.\n'
   fi
   if [[ "${VALLY_PREFLIGHT_ONLY:-0}" == "1" ]]; then
     printf 'Copilot preflight: passed.\n'

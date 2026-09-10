@@ -75,6 +75,9 @@ the Search MCP for each evaluation through its stdio environment.
 Required for the current Copilot evaluation specs:
 
 - `OPENAI_API_KEY` secret for the BYOK provider configured in the eval specs.
+- Each BYOK eval declares its own provider `baseUrl` and `model`. The runner
+  does not duplicate those settings; endpoint preflight is skipped unless an
+  `OPENAI_BASE_URL` is explicitly provided.
 - `TAVILY_API_KEY` secret for search research scenarios.
 
 Native Copilot authentication remains supported through the
