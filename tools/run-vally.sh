@@ -91,6 +91,10 @@ if [[ "$EXECUTOR" == "copilot-sdk" ]]; then
   fi
 fi
 
+if [[ "$EXECUTOR" == "claude-cli" || "$EXECUTOR" == "claude-cli-default" ]]; then
+  export PATH="$ROOT_DIR/node_modules/.bin:$PATH"
+fi
+
 if [[ "$#" -ne 0 ]]; then
   printf 'Usage: %s <executor> <local|ci>\n' "$0" >&2
   exit 2

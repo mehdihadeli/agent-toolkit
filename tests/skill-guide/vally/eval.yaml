@@ -1,6 +1,9 @@
 name: skill_guide
 version: "1.0"
 type: capability
+tags:
+  area: authoring
+  type: skill
 environment:
   env:
     COPILOT_AGENT_ACTION: review
@@ -43,6 +46,36 @@ stimuli:
     constraints:
       max_turns: 6
       max_tokens: 3500
+      max_duration: 75s
+      max_agent_duration: 60s
+      expect_skills: [skill-guide]
+  - name: validate-skill-design
+    prompt: |
+      Read requirements.md and use the skill-guide skill. Review the requested
+      build-failure skill design for authoring risks. Return a concise checklist
+      that covers frontmatter, trigger scope, progressive disclosure, secrets,
+      duplicated instructions, host conflicts, and one realistic validation
+      prompt. Include the literal phrases "progressive disclosure" and
+      "No credentials".
+    graders:
+      - type: output-contains
+        name: safety checklist
+        config:
+          substring: No credentials
+          case_sensitive: false
+      - type: output-contains
+        name: progressive disclosure guidance
+        config:
+          substring: progressive disclosure
+          case_sensitive: false
+      - type: output-contains
+        name: validation prompt
+        config:
+          substring: validation prompt
+          case_sensitive: false
+    constraints:
+      max_turns: 6
+      max_tokens: 3000
       max_duration: 75s
       max_agent_duration: 60s
       expect_skills: [skill-guide]

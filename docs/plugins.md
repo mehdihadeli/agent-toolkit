@@ -8,6 +8,10 @@
 Each plugin is an independent release boundary under `plugins/<id>/`. Include only
 the host surfaces that plugin provides:
 
+Agents, skills, commands, and MCPs are managed through their owning plugin. Do
+not add these surfaces as unrelated repository-level assets or duplicate them
+under host metadata.
+
 - `.claude-plugin/plugin.json` for Claude metadata.
 - `.codex-plugin/plugin.json` for Codex metadata.
 - `agents/` for executable or host-native agents.

@@ -1,6 +1,6 @@
 # Agent Toolkit
 
-Plugin-first repository for .NET MCP servers, coding-agent applications, and reusable agent skills for Claude Code, Codex, and GitHub Copilot.
+Plugin-first repository for .NET MCP servers, coding-agent applications, and reusable agent skills for Claude Code, Codex, and GitHub Copilot. Agents, skills, commands, and MCPs are managed as surfaces of their owning plugins.
 
 Read this file as a map. Detailed design guidance lives in `docs/`; plugin-specific usage and validation live in each plugin's `README.md`.
 
@@ -56,6 +56,11 @@ docs/               architecture, plugin, and packaging guidance
 
 Every plugin follows this release-boundary layout. Host manifests and plugin documentation live at the plugin root; executable code and reusable skills live in their owning directories.
 
+Agents, skills, commands, and MCPs are plugin-managed surfaces. Add or change
+them inside `plugins/<plugin-id>/`, update that plugin's README and host
+metadata when applicable, and keep tests and evaluations in the corresponding
+repository-level `tests/<plugin-id>/` directory.
+
 ```text
 plugins/<plugin-id>/
 ├── .claude-plugin/
@@ -107,6 +112,53 @@ Do not hand-edit generated output or duplicate plugin source in host metadata. W
 | `skill-guide`    | Markdown skill                          | Agent skill            | Skill authoring and validation guidance  |
 
 MCP servers expose executable tools. Standalone agents run as host applications. Skills provide on-demand workflow instructions; they are not MCP servers and do not require .NET projects.
+
+## Choose a plugin surface
+
+Choose the smallest surface that owns the behavior:
+
+| Surface        | Use when                                                                                                                                        | Typical location                      |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| `skills/`      | Reusable instructions, workflow guidance, or domain knowledge should activate from user intent.                                                 | `plugins/<id>/skills/<name>/SKILL.md` |
+| `commands/`    | A host command is a short, explicit entry point for a repeatable action, usually forwarding to an existing skill or tool.                       | `plugins/<id>/commands/`              |
+| Markdown agent | Host-native role needs explicit tools, boundaries, and output rules, without a separate runtime.                                                | `plugins/<id>/agents/<name>.md`       |
+| .NET agent     | Work needs executable orchestration, typed code, SDK integration, process control, or a standalone application lifecycle.                       | `plugins/<id>/agents/<name>/`         |
+| MCP            | A reusable capability should be exposed as discoverable tools to multiple hosts or clients, especially across a process or deployment boundary. | `plugins/<id>/mcps/<name>/`           |
+
+Do not use a Markdown agent for reusable guidance that belongs in a skill. Do
+not create an MCP for instructions alone. Use a .NET agent when the behavior is
+an application or runtime, and use an MCP when the primary contract is a set
+of callable tools. A plugin may combine surfaces when each has a clear owner;
+do not duplicate the same behavior across them.
+
+## Plugin authoring workflow
+
+1. Define one focused purpose and create `plugins/<id>/`.
+2. Add only needed surfaces, plus `README.md`, matching Claude and Codex manifests, and host metadata.
+3. Keep implementation, configuration, and supporting assets inside the plugin.
+4. Register the plugin in both marketplace files and keep name/version aligned.
+5. Add the corresponding tests under `tests/<id>/`.
+6. Update plugin documentation and relevant repository indexes.
+7. Run focused validation, then repository validation before publishing.
+
+## Test structure
+
+Tests mirror plugin ownership but stay at repository root:
+
+```text
+tests/<plugin-id>/
+├── vally/                  # Prompt behavior for skills, agents, and MCPs
+│   └── <area>/eval.yaml
+├── unit-tests/             # Fast isolated .NET tests
+└── integration-tests/     # Hosting, process, network, or external boundaries
+```
+
+Skill-only and Markdown-agent plugins normally use `vally/` evaluations and
+fixtures, not .NET test projects. MCPs and .NET agents use focused xUnit v3
+unit tests plus integration tests when they cross hosting, process, network,
+or external-service boundaries. Add a Vally evaluation when behavior is
+observable through a prompt, tool call, skill activation, or agent trajectory.
+Keep fixtures beside their evaluation and never put credentials in them.
 
 ## Important paths
 
