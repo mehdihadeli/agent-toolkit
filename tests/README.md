@@ -27,7 +27,7 @@ resolves the repository-local Copilot platform package.
 To use a globally installed Vally CLI instead, run `make VALLY=vally
 vally-eval`; the Makefile still configures the native Copilot executable.
 
-### Vally BYOK configuration
+## Vally BYOK configuration
 
 The Vally `copilot-sdk` executor supports BYOK through its
 `executor.config.provider` block. Keep the provider endpoint and model in the
@@ -51,6 +51,40 @@ does not interpolate `OPENAI_BASE_URL` or `OPENAI_MODEL` into these fields;
 explicit endpoint and model values keep eval plans validated and reproducible.
 See the [Vally BYOK reference](https://microsoft.github.io/vally/reference/eval-spec/#executor-config--byok).
 
+This differs from the custom `claude-cli` executor. Claude Code reads
+`ANTHROPIC_MODEL`, `ANTHROPIC_BASE_URL`, and its credential from the inherited
+process environment, so a Claude eval can select the runner without embedding
+provider settings:
+
+```yaml
+defaults:
+  executor: claude-cli
+```
+
+To verify provider settings explicitly, use a literal model and endpoint and
+keep only the credential environment-based:
+
+```yaml
+defaults:
+  model: deepseek-v4-flash
+  executor:
+    name: claude-cli
+    config:
+      provider:
+        baseUrl: https://api.deepseek.com/anthropic
+        apiKeyEnv: ANTHROPIC_API_KEY
+```
+
+The Claude executor accepts `apiKeyEnv` as an environment-variable name, but
+does not interpolate `baseUrl: ANTHROPIC_BASE_URL`. Omitting `model` and
+`baseUrl` instead lets Claude Code use inherited `ANTHROPIC_MODEL` and
+`ANTHROPIC_BASE_URL` values loaded by the Make wrapper.
+
+Copilot BYOK cannot use `OPENAI_MODEL` or `OPENAI_BASE_URL` as placeholder
+values in the eval. Keep the model and absolute base URL literal, and use
+`apiKeyEnv` only for the credential. The Claude form is supported by the
+repository's custom executor; it is not a general Vally interpolation feature.
+
 Run one suite with GitHub Copilot:
 
 ```bash
@@ -66,6 +100,23 @@ npm run build
 cd ../..
 claude login
 make vally-eval-claude
+```
+
+Claude evaluations support two executor-selection approaches:
+
+1. Pass the executor through the Vally command. `make vally-eval-claude-local`
+   invokes Vally with `--executor claude-cli`; this overrides the executor in
+   the eval spec.
+2. Select the executor in the eval spec. Set
+   `defaults.executor: claude-cli`, then run
+   `make vally-eval-claude-default-local`. This target omits `--executor` from
+   the Vally command, so Vally uses the eval's default executor.
+
+The second target requires `VALLY_EVAL_SPEC`, for example:
+
+```bash
+make vally-eval-claude-default-local \
+  VALLY_EVAL_SPEC=tests/dotnet-quality/vally/quality/eval.yaml
 ```
 
 The same executor pair applies to every Vally category:

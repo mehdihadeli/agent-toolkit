@@ -11,7 +11,7 @@ VALLY_RUNS ?= 1
 VALLY_PROCESSES ?= 4
 export VALLY VALLY_SUITE VALLY_EVAL_SPEC VALLY_WORKERS VALLY_RUNS VALLY_PROCESSES VALLY_ENV_FILE
 
-.PHONY: install validate vally-lint vally-eval vally-eval-copilot vally-eval-copilot-local vally-eval-copilot-ci vally-eval-claude vally-eval-claude-cli vally-eval-claude-local vally-eval-claude-ci check
+.PHONY: install validate vally-lint vally-preflight-copilot-local vally-preflight-copilot-ci vally-eval vally-eval-copilot vally-eval-copilot-local vally-eval-copilot-ci vally-eval-claude vally-eval-claude-cli vally-eval-claude-local vally-eval-claude-default-local vally-eval-claude-ci check
 
 install:
 	npm ci
@@ -26,10 +26,16 @@ vally-eval: vally-eval-copilot-local
 
 vally-eval-copilot: vally-eval-copilot-local
 
-vally-eval-copilot-local:
+vally-preflight-copilot-local:
+	VALLY_PREFLIGHT_ONLY=1 VALLY_PREFLIGHT_API=1 $(VALLY_EVAL_RUNNER) copilot-sdk local
+
+vally-preflight-copilot-ci:
+	VALLY_PREFLIGHT_ONLY=1 VALLY_PREFLIGHT_API=1 $(VALLY_EVAL_RUNNER) copilot-sdk ci
+
+vally-eval-copilot-local: vally-preflight-copilot-local
 	$(VALLY_EVAL_RUNNER) copilot-sdk local
 
-vally-eval-copilot-ci:
+vally-eval-copilot-ci: vally-preflight-copilot-ci
 	$(VALLY_EVAL_RUNNER) copilot-sdk ci
 
 vally-eval-claude: vally-eval-claude-local
@@ -38,6 +44,9 @@ vally-eval-claude-cli: vally-eval-claude-local
 
 vally-eval-claude-local:
 	$(VALLY_EVAL_RUNNER) claude-cli local
+
+vally-eval-claude-default-local:
+	$(VALLY_EVAL_RUNNER) claude-cli-default local
 
 vally-eval-claude-ci:
 	$(VALLY_EVAL_RUNNER) claude-cli ci

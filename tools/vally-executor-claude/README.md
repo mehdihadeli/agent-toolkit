@@ -61,6 +61,27 @@ defaults:
         apiKeyEnv: ANTHROPIC_API_KEY
 ```
 
+To make the model and endpoint explicit in the eval while keeping the secret
+out of YAML, use `defaults.model`, a literal `provider.baseUrl`, and
+`provider.apiKeyEnv`:
+
+```yaml
+defaults:
+  model: deepseek-v4-flash
+  executor:
+    name: claude-cli
+    config:
+      provider:
+        baseUrl: https://api.deepseek.com/anthropic
+        apiKeyEnv: ANTHROPIC_API_KEY
+```
+
+`baseUrl` is a literal URL and `apiKeyEnv` is the name of an environment
+variable. Values such as `baseUrl: ANTHROPIC_BASE_URL` are not interpolated.
+If `model` or `baseUrl` is omitted, Claude Code receives
+`ANTHROPIC_MODEL` or `ANTHROPIC_BASE_URL` from the inherited process
+environment.
+
 Supported provider fields are `baseUrl`, `apiKeyEnv`, and `bearerTokenEnv`.
 `bearerTokenEnv` takes precedence over `apiKeyEnv`; if both are set, the API-key
 variable is not read. A configured but unset variable fails that trial.
@@ -79,6 +100,42 @@ For local development, use the repository Make target to load an ignored `.env`
 file before Vally starts. For CI, use the CI secret/environment mechanism. The
 executor itself does not search parent directories, read `.env` files, or read
 Claude settings files.
+
+### Provider approaches
+
+Choose one of these approaches for a Claude evaluation:
+
+1. **Inherited environment:** set `ANTHROPIC_MODEL`, `ANTHROPIC_BASE_URL`, and
+   `ANTHROPIC_API_KEY` in `.env` or CI, then use `defaults.executor: claude-cli`.
+   This keeps all provider values outside the eval spec.
+1. **Explicit eval configuration:** set `defaults.model` and a literal
+   `provider.baseUrl`, and use `provider.apiKeyEnv` for the credential. This
+   makes model and endpoint visible and reproducible while keeping the secret
+   outside YAML.
+1. **Bearer-token authentication:** use `bearerTokenEnv` instead of
+   `apiKeyEnv` when the Claude endpoint expects `ANTHROPIC_AUTH_TOKEN`:
+
+```yaml
+defaults:
+  executor:
+    name: claude-cli
+    config:
+      provider:
+        baseUrl: https://api.anthropic.com
+        bearerTokenEnv: ANTHROPIC_AUTH_TOKEN
+```
+
+`bearerTokenEnv` takes precedence if both credential fields are present.
+
+1. **CLI behavior configuration:** use `command`, `permissionMode`,
+   `maxBudgetUsd`, or `extraArgs` under `executor.config` to control the Claude
+   CLI invocation. These options change how Claude runs; they do not load
+   provider values from YAML environment-variable names.
+
+The Make targets load `.env` before Vally starts. The explicit target
+`vally-eval-claude-local` passes `--executor claude-cli`; the
+`vally-eval-claude-default-local` target omits that flag and lets
+`defaults.executor` select the custom executor.
 
 ## Run an Evaluation
 

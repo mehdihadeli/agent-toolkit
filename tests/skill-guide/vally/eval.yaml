@@ -10,7 +10,14 @@ environment:
 defaults:
   runs: 1
   timeout: 2m
-  executor: copilot-sdk
+  model: deepseek-v4-flash
+  executor:
+    name: copilot-sdk
+    config:
+      provider:
+        type: openai
+        baseUrl: https://api.deepseek.com/v1
+        apiKeyEnv: OPENAI_API_KEY
 stimuli:
   - name: design-skill
     prompt: |
