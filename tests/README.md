@@ -135,6 +135,8 @@ cd tools/vally-executor-claude
 npm install
 npm run build
 cd ../..
+npm ci
+npm run build --prefix tools/vally-executor-claude
 claude login
 make vally-eval-claude
 ```
@@ -175,7 +177,8 @@ Vally launches directly from `.vally.yaml`. Select
 GitHub Actions runs both evaluations in one job through `.github/workflows/evaluation.yml`. It installs GitHub Copilot CLI, lets Vally launch the C# stdio Search MCP from the named environment, and invokes Vally sequentially with `copilot-sdk` and, when enabled, `claude-cli`. Results use separate `copilot/` and `claude/` directories under one artifact. Root `.vally.yaml` discovers all nested plugin `eval.yaml` files. Configure the `COPILOT_GITHUB_TOKEN` repository secret for Copilot-backed evaluation jobs.
 
 Claude evaluation is disabled by default. Enable it with repository variable
-`ENABLE_CLAUDE_EVAL=true` and secret `ANTHROPIC_API_KEY`. The same job then
+the `ANTHROPIC_API_KEY` secret and `ANTHROPIC_BASE_URL` and
+`ANTHROPIC_MODEL` repository variables. The same job then
 installs Claude Code, builds the local Vally executor, and runs the same suite
 after the Copilot evaluation.
 

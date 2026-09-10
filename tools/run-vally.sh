@@ -60,6 +60,14 @@ case "$EXECUTOR" in
       printf 'One Claude credential is required: ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN\n' >&2
       exit 1
     fi
+    if [[ -z "${ANTHROPIC_BASE_URL:-}" ]]; then
+      printf 'ANTHROPIC_BASE_URL is required for Claude evaluations.\n' >&2
+      exit 1
+    fi
+    if [[ -z "${ANTHROPIC_MODEL:-}" ]]; then
+      printf 'ANTHROPIC_MODEL is required for Claude evaluations.\n' >&2
+      exit 1
+    fi
     ;;
   *)
     printf 'Unsupported or missing executor: %s\n' "$EXECUTOR" >&2

@@ -50,9 +50,8 @@ explicitly to override it.
 Run the same spec through Claude Code with the repository executor:
 
 ```bash
-cd tools/vally-executor-claude
-npm install && npm run build
-cd ../..
+npm ci
+npm run build --prefix tools/vally-executor-claude
 claude login
 make vally-eval-claude
 ```
@@ -129,4 +128,4 @@ make VALLY=vally VALLY_SUITE=search-smoke VALLY_RUNS=3 vally-eval
   can separate fast smoke checks from external, expensive scenarios.
 - Add the relevant evaluation path to CI when introducing a new runtime requirement.
 
-GitHub Actions runs lint and the `plugin-evals` suite in one evaluation job. It runs Copilot first, then optionally runs Claude Code in the same job with separate result directories. Set repository variable `ENABLE_CLAUDE_EVAL=true` and secret `ANTHROPIC_API_KEY` to enable the Claude step; the job installs Claude Code, builds the local executor, and runs the same suite through `claude-cli`.
+GitHub Actions runs lint and the `plugin-evals` suite in one evaluation job. It runs Copilot first, then Claude Code in the same job with separate result directories. Configure the `ANTHROPIC_API_KEY` secret and `ANTHROPIC_BASE_URL` and `ANTHROPIC_MODEL` repository variables; the job installs Claude Code, builds the local executor, and runs the same suite through `claude-cli`.

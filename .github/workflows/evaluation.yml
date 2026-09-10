@@ -64,9 +64,11 @@ jobs:
     name: Run Vally evaluation suite
     needs: lint
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      ANTHROPIC_BASE_URL: ${{ vars.ANTHROPIC_BASE_URL }}
+      ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -86,12 +88,7 @@ jobs:
       - name: Install repository Node dependencies
         run: npm ci
 
-      - name: Install Claude Code
-        if: ${{ vars.ENABLE_CLAUDE_EVAL == 'true' }}
-        run: npm install --global @anthropic-ai/claude-code
-
       - name: Build Claude Vally executor
-        if: ${{ vars.ENABLE_CLAUDE_EVAL == 'true' }}
         run: |
           npm ci --prefix tools/vally-executor-claude
           npm run build --prefix tools/vally-executor-claude
@@ -105,7 +102,6 @@ jobs:
         run: make vally-eval-copilot-ci
 
       - name: Run Vally evaluation with Claude Code
-        if: ${{ vars.ENABLE_CLAUDE_EVAL == 'true' }}
         run: make vally-eval-claude-ci
 
       - name: Upload evaluation results

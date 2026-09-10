@@ -90,10 +90,17 @@ to read the provider secret from the Vally process environment. The provider
 `OPENAI_BASE_URL` and `OPENAI_MODEL` are documented local settings but are not
 automatically interpolated by Vally. See the [Vally BYOK reference](https://microsoft.github.io/vally/reference/eval-spec/#executor-config--byok).
 
-Optional Claude evaluation:
+Claude evaluation is mandatory in the evaluation job:
 
-- Repository variable `ENABLE_CLAUDE_EVAL=true`.
 - `ANTHROPIC_API_KEY` secret.
+- `ANTHROPIC_BASE_URL` repository variable for the Anthropic-compatible
+  gateway used by the eval model.
+- `ANTHROPIC_MODEL` repository variable.
+
+The current eval specs declare `deepseek-v4-flash`, so CI must provide an
+Anthropic-compatible `ANTHROPIC_BASE_URL` for that model. `ANTHROPIC_API_KEY`
+alone targets Anthropic's public API and does not make the DeepSeek model
+available.
 
 Claude evaluation runs in the same evaluation job as Copilot, after the
 Copilot run, and uses the same Search MCP process. .NET tests run once because
@@ -145,7 +152,7 @@ Run Vally with Claude after building the local executor and authenticating
 Claude Code:
 
 ```bash
-npm ci --prefix tools/vally-executor-claude
+npm ci
 npm run build --prefix tools/vally-executor-claude
 claude login
 make vally-eval-claude
