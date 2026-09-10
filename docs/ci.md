@@ -53,16 +53,18 @@ The `Run Vally evaluation suite` job starts after lint succeeds:
 1. Installs the repository-pinned Vally CLI and GitHub Copilot CLI with
    `npm ci`, then invokes `make vally-eval` so it uses the same command as
    local development without depending on global npm modules.
-2. Optionally installs Claude Code and builds
-   `tools/vally-executor-claude` when repository variable
-   `ENABLE_CLAUDE_EVAL` equals `true`.
-3. Installs the .NET SDK selected by `global.json`.
-4. Vally launches the C# Search MCP through the named `search-mcp` stdio
+1. Installs the repository-pinned Vally CLI and Copilot CLI with
+   `npm ci`, then invokes `make vally-eval-copilot-ci` without depending on
+   global npm modules.
+1. Installs the .NET SDK selected by `global.json`.
+1. Vally launches the C# Search MCP through the named `search-mcp` stdio
    environment in `.vally.yaml`.
-5. Runs the complete `plugin-evals` suite with `make vally-eval`.
-6. When Claude is enabled, runs the same suite sequentially through
+1. Runs the complete `plugin-evals` suite with `make vally-eval-copilot-ci`.
+   CI executes each eval file one at a time, continues after individual eval
+   failures to collect the full report, and fails the job when any eval fails.
+1. When Claude is enabled, runs the same suite sequentially through
    `make vally-eval-claude`.
-7. Uploads results from `.work/vally/results/` as a workflow artifact for 14
+1. Uploads results from `.work/vally/results/` as a workflow artifact for 14
    days. Copilot and Claude runs use separate result directories.
 
 One job is sufficient because both executors run sequentially. Vally launches
@@ -70,10 +72,14 @@ the Search MCP for each evaluation through its stdio environment.
 
 ## Credentials and settings
 
-Required for the default Copilot evaluation:
+Required for the current Copilot evaluation specs:
 
-- `COPILOT_GITHUB_TOKEN` secret, with `GITHUB_TOKEN` used as fallback.
+- `OPENAI_API_KEY` secret for the BYOK provider configured in the eval specs.
 - `TAVILY_API_KEY` secret for search research scenarios.
+
+Native Copilot authentication remains supported through the
+`COPILOT_GITHUB_TOKEN` secret, with `GITHUB_TOKEN` used as fallback, when an
+eval spec does not configure a BYOK provider.
 
 For Copilot SDK BYOK evaluations, the eval specs use `apiKeyEnv: OPENAI_API_KEY`
 to read the provider secret from the Vally process environment. The provider
@@ -109,8 +115,12 @@ make check
 Run default Copilot evaluations:
 
 ```bash
-make vally-eval
+make vally-eval-copilot-ci
 ```
+
+For local evaluation with both executors, use `make vally-eval`. It runs all
+Copilot evals followed by all Claude Code evals and reports failure after both
+runs complete.
 
 Run .NET tests:
 

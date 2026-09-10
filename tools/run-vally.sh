@@ -19,14 +19,18 @@ case "$MODE" in
     ;;
   local)
     if [[ ! -f "$ENV_FILE" ]]; then
-      printf 'Missing environment file: %s\n' "$ENV_FILE" >&2
-      printf 'Create .env locally or set VALLY_ENV_FILE.\n' >&2
-      exit 1
+      printf 'Environment file not found: %s; using exported variables.\n' "$ENV_FILE"
+    else
+      while IFS= read -r env_line || [[ -n "$env_line" ]]; do
+        if [[ "$env_line" =~ ^[[:space:]]*(export[[:space:]]+)?([A-Za-z_][A-Za-z0-9_]*)[[:space:]]*= ]]; then
+          env_name="${BASH_REMATCH[2]}"
+          if [[ ! -v "$env_name" ]]; then
+            env_value="${env_line#*=}"
+            eval "export ${env_name}=${env_value}"
+          fi
+        fi
+      done < "$ENV_FILE"
     fi
-    set -a
-    # shellcheck disable=SC1090
-    source "$ENV_FILE"
-    set +a
     ;;
   *)
     printf 'Unsupported or missing mode: %s\n' "$MODE" >&2
@@ -34,6 +38,8 @@ case "$MODE" in
     exit 2
     ;;
 esac
+
+export LOG_LEVEL="${LOG_LEVEL:-debug}"
 
 case "$EXECUTOR" in
   copilot-sdk)
@@ -99,7 +105,7 @@ read -r -a VALLY_ARGS <<< "$VALLY_COMMAND"
 VALLY_SUITE="${VALLY_SUITE:-plugin-evals}"
 VALLY_RUNS="${VALLY_RUNS:-1}"
 VALLY_WORKERS="${VALLY_WORKERS:-1}"
-VALLY_PROCESSES="${VALLY_PROCESSES:-4}"
+VALLY_PROCESSES=1
 if [[ "$EXECUTOR" == "claude-cli" || "$EXECUTOR" == "claude-cli-default" ]]; then
   OUTPUT_DIR=.work/vally/results/claude
 else
@@ -148,15 +154,15 @@ if [[ "$EXECUTOR" == "copilot-sdk" && -z "${VALLY_EVAL_SPEC:-}" && "$VALLY_SUITE
     run_eval "$eval_spec" "$OUTPUT_DIR/$eval_id"
   }
 
-  pids=()
+  eval_failed=0
   while IFS= read -r eval_spec; do
-    run_eval_spec "$eval_spec" & pids+=("$!")
-    while [[ "${#pids[@]}" -ge "$VALLY_PROCESSES" ]]; do
-      wait "${pids[0]}"
-      pids=("${pids[@]:1}")
-    done
+    if ! run_eval_spec "$eval_spec"; then
+      eval_failed=1
+    fi
   done < <(find "$ROOT_DIR/tests" -type f -name eval.yaml -print | sort)
-  for pid in "${pids[@]}"; do wait "$pid"; done
+  if [[ "$eval_failed" -ne 0 ]]; then
+    exit 1
+  fi
 else
   run_eval "${VALLY_EVAL_SPEC:-}" "$OUTPUT_DIR"
 fi

@@ -2,6 +2,9 @@ name: dotnet_quality_agent
 version: "1.0"
 type: capability
 environment:
+  env:
+    COPILOT_AGENT_ACTION: review
+    LOG_LEVEL: debug
   files:
     - src: fixtures/Sample.cs
       dest: Sample.cs
@@ -41,6 +44,8 @@ stimuli:
     constraints:
       max_turns: 8
       max_tokens: 4000
+      max_duration: 90s
+      max_agent_duration: 75s
 scoring:
   weights:
     output-contains: 1.0

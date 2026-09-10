@@ -10,13 +10,15 @@ environment:
     agent-toolkit-search:
       type: stdio
       command: dotnet
-      cwd: ../../../../
+      cwd: .
       args:
         - run
         - --project
         - plugins/search/mcps/search/AgentSkillsMcp.Search.csproj
         - --no-launch-profile
       timeout: 30s
+      env:
+        LOG_LEVEL: debug
 defaults:
   runs: 1
   timeout: 2m
@@ -58,6 +60,8 @@ stimuli:
     constraints:
       max_turns: 5
       max_tokens: 2500
+      max_duration: 150s
+      max_agent_duration: 120s
       expect_tools: [fetch]
   - name: research-with-citations
     tags:
@@ -89,9 +93,10 @@ stimuli:
       cost: high
     prompt: |
       Call only the agent-toolkit-search MCP tool named search now with query
-      "what's new in .NET 10". Wait for the search result, then return two
-      relevant result titles with their source URLs. Prefer learn.microsoft.com
-      sources and do not invent results.
+      "site:learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-10/overview
+      what's new in .NET 10". Wait for the search result, then return two
+      relevant result titles with their source URLs. Return at least one
+      learn.microsoft.com source and do not invent results.
     graders:
       - type: completed
       - type: output-contains

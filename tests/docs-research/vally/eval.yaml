@@ -2,6 +2,9 @@ name: docs_research_skill
 version: "1.0"
 type: capability
 environment:
+  env:
+    COPILOT_AGENT_ACTION: review
+    LOG_LEVEL: debug
   skills:
     - ../../../plugins/docs-research/skills/docs-research
   files:
@@ -22,11 +25,12 @@ stimuli:
   - name: produce-versioned-checklist
     prompt: |
       Read task.md and use the docs-research skill. Research the current Vally
-      documentation approach for this task. Return exactly these headings:
+      documentation approach for this task. No documentation research MCP is
+      configured in this environment, so do not call or invent a research tool;
+      use the official URL provided below as the source citation. Return exactly these headings:
       What changed, What matters for this repo, Implementation checklist,
-      Risks/unknowns. Include at least one official source URL containing the
-      literal prefix https://microsoft.github.io/vally and do not invent
-      unknowns.
+      Risks/unknowns. Include this official source URL:
+      https://microsoft.github.io/vally. Do not invent unknowns.
     graders:
       - type: output-contains
         name: checklist headings
@@ -39,8 +43,10 @@ stimuli:
           substring: microsoft.github.io/vally
           case_sensitive: false
     constraints:
-      max_turns: 8
-      max_tokens: 4000
+      max_turns: 4
+      max_tokens: 2500
+      max_duration: 75s
+      max_agent_duration: 60s
       expect_skills: [docs-research]
   - name: recommend-missing-research-tools
     prompt: |
@@ -67,8 +73,8 @@ stimuli:
           substring: Risks/unknowns
           case_sensitive: false
     constraints:
-      max_turns: 8
-      max_tokens: 4000
+      max_turns: 4
+      max_tokens: 2500
       expect_skills: [docs-research]
 scoring:
   weights:

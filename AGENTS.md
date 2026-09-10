@@ -6,7 +6,7 @@ Read this file as a map. Detailed design guidance lives in `docs/`; plugin-speci
 
 ## Map
 
-- [README.md](README.md): repository overview and plugin list.
+- [docs/plugins.md](docs/plugins.md): plugin catalog and host registrations.
 - [CONTRIBUTING.md](CONTRIBUTING.md): contribution workflow and quality checklist.
 - [docs/architecture.md](docs/architecture.md): boundaries, runtimes, and ownership.
 - [docs/plugins.md](docs/plugins.md): plugin catalog and host registrations.

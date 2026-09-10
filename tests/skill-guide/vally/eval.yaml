@@ -2,6 +2,9 @@ name: skill_guide
 version: "1.0"
 type: capability
 environment:
+  env:
+    COPILOT_AGENT_ACTION: review
+    LOG_LEVEL: debug
   skills:
     - ../../../plugins/skill-guide/skills/skill-guide
   files:
@@ -40,6 +43,8 @@ stimuli:
     constraints:
       max_turns: 6
       max_tokens: 3500
+      max_duration: 75s
+      max_agent_duration: 60s
       expect_skills: [skill-guide]
 scoring:
   weights:

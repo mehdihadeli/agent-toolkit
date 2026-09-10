@@ -2,6 +2,9 @@ name: dotnet_quality_report
 version: "1.0"
 type: capability
 environment:
+  env:
+    COPILOT_AGENT_ACTION: review
+    LOG_LEVEL: debug
   files:
     - src: ../agent/fixtures/Sample.cs
       dest: Sample.cs
@@ -22,7 +25,8 @@ stimuli:
   - name: analyze-quality
     prompt: |
       Inspect Sample.cs and Sample.csproj. Act as the dotnet-quality agent:
-      provide a concise report organized by priority with impact, confidence,
+      provide a concise report whose first section heading is exactly
+      "Priority". Organize findings by priority with impact, confidence,
       affected files, exact scope, and next steps. Include the exact phrase
       "do not modify". Do not modify files.
     graders:
@@ -39,6 +43,8 @@ stimuli:
     constraints:
       max_turns: 8
       max_tokens: 4000
+      max_duration: 90s
+      max_agent_duration: 75s
 scoring:
   weights:
     output-contains: 1.0

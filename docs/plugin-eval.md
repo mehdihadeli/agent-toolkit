@@ -28,12 +28,24 @@ This repository defines named environments for `docs-research`, `skill-guide`,
 
 ## Focused evaluation
 
-Run the default Copilot evaluation after installing repository dependencies:
+Run the complete local evaluation with both executors after installing repository dependencies:
 
 ```bash
 npm ci
 make vally-eval
 ```
+
+`make vally-eval` runs the complete suite with Copilot SDK, then runs the same
+suite with Claude Code. It continues to Claude Code when Copilot has failures
+and returns a nonzero status if either executor fails. Build the Claude
+executor and authenticate Claude Code before using this combined target.
+
+Local Make targets load variables from the repository root `.env` when it
+exists. Variables already exported by the operating system take precedence;
+set `VALLY_ENV_FILE` to use a different file. CI targets do not read `.env`
+and use exported CI variables only. Vally runs default with `LOG_LEVEL=debug`,
+inherited by Copilot, Claude Code, and MCP child processes; set `LOG_LEVEL`
+explicitly to override it.
 
 Run the same spec through Claude Code with the repository executor:
 
@@ -95,12 +107,9 @@ cat .work/vally/results/copilot/<run>/results.jsonl \
 
 Keep `VALLY_WORKERS=1` inside each Vally process for file-backed environments:
 Vally's session filesystem provider is process-global. The full default suite
-avoids blocking by running each eval file in its own process, up to four
-processes at once. Change that limit with `VALLY_PROCESSES`:
-
-```bash
-make VALLY=vally VALLY_PROCESSES=2 vally-eval
-```
+runs each eval file in its own process, sequentially. Each eval therefore owns
+its timeout, environment, fixture filesystem, and MCP child process. The
+runner continues after failures and exits nonzero if any eval fails.
 
 Increase confidence with repeated trials inside each isolated process instead:
 

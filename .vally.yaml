@@ -25,15 +25,20 @@ environments:
   docs-research-with-search:
     skills:
       - plugins/docs-research/skills/docs-research
+    env:
+      COPILOT_AGENT_ACTION: review
+      LOG_LEVEL: debug
     mcpServers:
       agent-toolkit-search:
         type: stdio
         command: dotnet
+        cwd: .
         args:
           - run
           - --project
           - plugins/search/mcps/search/AgentSkillsMcp.Search.csproj
           - --no-launch-profile
+        timeout: 30s
   skill-guide:
     skills:
       - plugins/skill-guide/skills/skill-guide
@@ -44,6 +49,9 @@ environments:
       - src: .github/agents/dotnet-quality.agent.md
         dest: .claude/agents/dotnet-quality.md
   search-mcp:
+    env:
+      COPILOT_AGENT_ACTION: review
+      LOG_LEVEL: debug
     mcpServers:
       agent-toolkit-search:
         type: stdio

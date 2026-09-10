@@ -2,24 +2,28 @@ name: docs_research_with_available_search
 version: "1.0"
 type: capability
 environment:
+  env:
+    COPILOT_AGENT_ACTION: review
+    LOG_LEVEL: debug
   skills:
     - ../../../../plugins/docs-research/skills/docs-research
+  files:
+    - src: ../fixtures/task.md
+      dest: task.md
   mcpServers:
     agent-toolkit-search:
       type: stdio
       command: dotnet
-      cwd: ../../../../
+      cwd: .
       args:
         - run
         - --project
         - plugins/search/mcps/search/AgentSkillsMcp.Search.csproj
         - --no-launch-profile
-  files:
-    - src: ../fixtures/task.md
-      dest: task.md
+      timeout: 30s
 defaults:
   runs: 1
-  timeout: 2m
+  timeout: 3m
   model: deepseek-v4-flash
   executor:
     name: copilot-sdk
@@ -32,8 +36,9 @@ stimuli:
   - name: use-available-search-tool
     prompt: |
       Read task.md and use the docs-research skill. First inspect the tools
-      available in this environment. Use agent-toolkit-search if available to
-      find relevant official Vally documentation, then return exactly these
+      available in this environment. Call agent-toolkit-search exactly once to
+      find relevant official Vally documentation. Do not use web_search or
+      web_fetch. Then return exactly these
       headings: What changed, What matters for this repo, Implementation
       checklist, Risks/unknowns. State which research tool you used and include
       the literal URL https://microsoft.github.io/vally as an official source.
@@ -55,9 +60,12 @@ stimuli:
           substring: microsoft.github.io/vally
           case_sensitive: false
     constraints:
-      max_turns: 10
-      max_tokens: 5000
+      max_turns: 6
+      max_tokens: 3500
+      max_duration: 150s
+      max_agent_duration: 120s
       expect_skills: [docs-research]
+      expect_tools: [agent-toolkit-search]
 scoring:
   weights:
     output-contains: 1.0

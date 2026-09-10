@@ -85,6 +85,43 @@ values in the eval. Keep the model and absolute base URL literal, and use
 `apiKeyEnv` only for the credential. The Claude form is supported by the
 repository's custom executor; it is not a general Vally interpolation feature.
 
+### Run one eval with both executors
+
+An eval can keep Copilot as its default executor and still run with Claude.
+For example, this configuration makes `copilot-sdk` the default:
+
+```yaml
+defaults:
+  model: deepseek-v4-flash
+  executor:
+    name: copilot-sdk
+    config:
+      provider:
+        type: openai
+        baseUrl: https://api.deepseek.com/v1
+        apiKeyEnv: OPENAI_API_KEY
+```
+
+Run that file with Copilot without an override:
+
+```bash
+make vally-eval-copilot-local \
+  VALLY_EVAL_SPEC=tests/dotnet-quality/vally/quality/eval.yaml
+```
+
+Run the same file with Claude by passing the Claude executor through the
+command:
+
+```bash
+make vally-eval-claude-local \
+  VALLY_EVAL_SPEC=tests/dotnet-quality/vally/quality/eval.yaml
+```
+
+The Claude target passes `--executor claude-cli` to Vally. That command-line
+executor overrides `defaults.executor`, so the YAML does not need to change.
+Claude uses its own inherited `ANTHROPIC_*` configuration loaded by the Make
+wrapper. This supports running one shared eval spec with both executors.
+
 Run one suite with GitHub Copilot:
 
 ```bash
