@@ -26,7 +26,14 @@ case "$MODE" in
           env_name="${BASH_REMATCH[2]}"
           if [[ ! -v "$env_name" ]]; then
             env_value="${env_line#*=}"
-            eval "export ${env_name}=${env_value}"
+            env_value="${env_value#"${env_value%%[![:space:]]*}"}"
+            env_value="${env_value%"${env_value##*[![:space:]]}"}"
+            if [[ "${env_value:0:1}" == '"' && "${env_value: -1}" == '"' ]] ||
+              [[ "${env_value:0:1}" == "'" && "${env_value: -1}" == "'" ]]; then
+              env_value="${env_value:1:${#env_value}-2}"
+            fi
+            printf -v "$env_name" '%s' "$env_value"
+            export "$env_name"
           fi
         fi
       done < "$ENV_FILE"
