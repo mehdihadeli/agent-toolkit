@@ -1,33 +1,42 @@
 # Continuous Integration
 
-GitHub Actions uses two workflows. Both run on `ubuntu-latest`, use read-only
-repository permissions, and cancel older runs for the same branch or pull
-request when a newer run starts.
+GitHub Actions separates build/release, evaluation, harness, documentation,
+trigger evaluation, and labeling workflows. Build/release permissions are
+read-only except for the release job. See [Versioning](versioning.md) for the
+NBGV version contract and Release Drafter behavior.
 
 ## Workflow map
 
 | Workflow          | File                                 | Purpose                                                                                   |
 | ----------------- | ------------------------------------ | ----------------------------------------------------------------------------------------- |
-| .NET plugin tests | `.github/workflows/dotnet-tests.yml` | Build and run all .NET unit and integration tests.                                        |
+| Build-Test-Publish | `.github/workflows/build-and-publish.yml` | Test .NET plugins, calculate NBGV versions, and update GitHub releases. |
 | Evaluation        | `.github/workflows/evaluation.yml`   | Validate repository metadata, lint Vally specs, and run prompt-driven plugin evaluations. |
 
-## .NET plugin tests
+## Build and release workflow
 
-The `.NET plugin tests` workflow runs for pull requests and pushes to `main`
-that change plugin agents or MCPs, unit or integration tests, the solution, the
-SDK selection, or the workflow itself. It can also be started manually with
-`workflow_dispatch`.
+The `Build-Test-Publish` workflow runs for pull requests, pushes to `main`, and
+`v*` tags. It can also be started manually with `workflow_dispatch`.
 
-Its single job:
+Its build/test job:
 
 1. Checks out the repository.
 2. Installs the SDK selected by `global.json`.
-3. Runs `dotnet test --solution agent-toolkit.slnx`.
+3. Runs `dotnet test --solution agent-toolkit.slnx --configuration Release`.
 
-This workflow covers executable .NET plugins. Live Tavily SDK tests are not
-part of normal pull-request runs because they consume API credits. Start this
-workflow manually and set `Run live Tavily SDK integration tests` when those
-tests are needed; the job requires the `TAVILY_API_KEY` secret.
+After tests pass, `main` and tag runs calculate versions using the pinned NBGV
+tool and full Git history. Eligible previews and RCs update draft prereleases;
+stable tags publish releases. Bootstrap preview height zero is validation-only.
+The workflow publishes release notes, not NuGet packages or binaries.
+
+This workflow covers executable .NET plugins. Live Tavily SDK tests are off by
+default because they consume API credits. Set the GitHub Actions repository
+variable `ENABLED_LIVE_TESTS` to `true` to enable live tests across CI workflows,
+including automatic pushes and same-repository pull requests. Configure the
+`TAVILY_API_KEY` repository secret before enabling this setting. The test step
+fails if the secret is missing rather than silently skipping requested tests.
+Fork pull requests always keep live tests disabled because secrets are unavailable.
+For a single manual run, select the `run_live_tests` checkbox instead.
+For local runs, set `TAVILY_RUN_LIVE_TESTS=1` and `TAVILY_API_KEY`.
 
 ## Evaluation workflow
 
@@ -39,31 +48,42 @@ jobs:
 
 The `Vally lint` job:
 
-1. Installs Node.js 22 and the repository-pinned Vally CLI and Copilot CLI.
+1. Installs mise, Node.js 22, and the repository-pinned Vally CLI and Copilot CLI.
 2. Uses repository-local binaries so Vally resolves the matching Copilot
    platform package.
-3. Runs `make validate` to validate manifests, marketplace paths, skill
+3. Runs `mise run validate` to validate manifests, marketplace paths, skill
    frontmatter, and local Markdown links.
-4. Runs `make vally-lint` to validate skill and evaluation configuration.
+4. Runs `mise run vally-lint` to validate skill and evaluation configuration.
 
 ### Evaluation job
 
-The `Run Vally evaluation suite` job starts after lint succeeds:
+The `Run Vally evaluation suite` job starts after lint succeeds when repository
+variable `ENABLED_LIVE_TESTS` is `true` or a manual `Evaluation` run selects
+`run_live_tests`. The shared repository variable enables live mode in both
+`Evaluation` and `Build-Test-Publish`; manual inputs apply only to their own
+workflow. Unset or false means live mode is off unless manually opted in.
+
+With the repository variable enabled, eligible pushes, same-repository pull
+requests, scheduled runs, and manual runs execute Copilot and Claude Code.
+Fork pull requests always run lint only. When live mode is off, the evaluation
+job is skipped, including its provider credentials and executor setup.
+
+When live evaluation is enabled, the job:
 
 1. Installs the repository-pinned Vally CLI and GitHub Copilot CLI with
-   `npm ci`, then invokes `make vally-eval` so it uses the same command as
+   `npm ci`, then invokes `mise run vally-eval` so it uses the same command as
    local development without depending on global npm modules.
 1. Installs the repository-pinned Vally CLI and Copilot CLI with
-   `npm ci`, then invokes `make vally-eval-copilot-ci` without depending on
+   `npm ci`, then invokes `mise run vally-eval-copilot-ci` without depending on
    global npm modules.
 1. Installs the .NET SDK selected by `global.json`.
 1. Vally launches the C# Search MCP through the named `search-mcp` stdio
    environment in `.vally.yaml`.
-1. Runs the complete `plugin-evals` suite with `make vally-eval-copilot-ci`.
+1. Runs the complete `plugin-evals` suite with `mise run vally-eval-copilot-ci`.
    CI executes each eval file one at a time, continues after individual eval
    failures to collect the full report, and fails the job when any eval fails.
 1. When Claude is enabled, runs the same suite sequentially through
-   `make vally-eval-claude`.
+   `mise run vally-eval-claude`.
 1. Uploads results from `.work/vally/results/` as a workflow artifact for 14
    days. Copilot and Claude runs use separate result directories.
 
@@ -72,7 +92,7 @@ the Search MCP for each evaluation through its stdio environment.
 
 ## Credentials and settings
 
-Required for the current Copilot evaluation specs:
+Required when live mode is enabled for the current Copilot evaluation specs:
 
 - `OPENAI_API_KEY` secret for the BYOK provider configured in the eval specs.
 - Each BYOK eval declares its own provider `baseUrl` and `model`. The runner
@@ -90,7 +110,8 @@ to read the provider secret from the Vally process environment. The provider
 `OPENAI_BASE_URL` and `OPENAI_MODEL` are documented local settings but are not
 automatically interpolated by Vally. See the [Vally BYOK reference](https://microsoft.github.io/vally/reference/eval-spec/#executor-config--byok).
 
-Claude evaluation is mandatory in the evaluation job:
+When live mode is enabled, the evaluation job runs both Copilot and Claude
+Code. Claude requires:
 
 - `ANTHROPIC_API_KEY` secret.
 - `ANTHROPIC_BASE_URL` repository variable for the Anthropic-compatible
@@ -119,16 +140,16 @@ code.
 Run static checks:
 
 ```bash
-make check
+mise run check
 ```
 
 Run default Copilot evaluations:
 
 ```bash
-make vally-eval-copilot-ci
+mise run vally-eval-copilot-ci
 ```
 
-For local evaluation with both executors, use `make vally-eval`. It runs all
+For local evaluation with both executors, use `mise run vally-eval`. It runs all
 Copilot evals followed by all Claude Code evals and reports failure after both
 runs complete.
 
@@ -141,12 +162,13 @@ dotnet test --solution agent-toolkit.slnx
 Run Vally with Copilot:
 
 ```bash
-make vally-eval
+mise run vally-eval
 ```
 
-For a global Vally installation, use `make VALLY=vally vally-eval`. The
-Makefile still supplies `COPILOT_CLI_PATH` from the repository's native
-Copilot package, avoiding the Windows npm-shim resolution problem.
+For a global Vally installation, set `VALLY=vally` before running
+`mise run vally-eval`. The task still supplies `COPILOT_CLI_PATH` from the
+repository's native Copilot package, avoiding the Windows npm-shim resolution
+problem.
 
 Run Vally with Claude after building the local executor and authenticating
 Claude Code:
@@ -155,7 +177,7 @@ Claude Code:
 npm ci
 npm run build --prefix tools/vally-executor-claude
 claude login
-make vally-eval-claude
+mise run vally-eval-claude
 ```
 
 Search MCP evaluations launch the local C# stdio MCP through Vally and require
@@ -163,6 +185,5 @@ its provider credentials. See [plugin-eval.md](plugin-eval.md) for focused
 evaluations.
 
 Live Tavily SDK tests require both `TAVILY_RUN_LIVE_TESTS=1` and
-`TAVILY_API_KEY`; the manual workflow input configures the environment for
-them. Normal .NET runs leave the flag unset, so live tests are reported as
+`TAVILY_API_KEY`. Normal CI runs set the flag to `0`, so live tests are reported as
 skipped rather than making network calls.

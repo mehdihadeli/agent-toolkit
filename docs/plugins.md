@@ -4,6 +4,11 @@
 | -------------- | ------------------------------------ | ---------- | --------------------- |
 | Search         | .NET MCP + Microsoft Agent Framework | None       | MCP                   |
 | Dotnet Quality | Copilot SDK .NET agent               | None       | Standalone .NET agent |
+| Planning       | Markdown skill + Node.js script      | Node.js 22.12+ | Agent skill       |
+
+[Planning](../plugins/planning/README.md) provides the `durable-plans` skill.
+It persists task events and generated checkpoints in the target workspace,
+with explicit revision checks, evidence gates, and dependency invalidation.
 
 Each plugin is an independent release boundary under `plugins/<id>/`. Include only
 the host surfaces that plugin provides:

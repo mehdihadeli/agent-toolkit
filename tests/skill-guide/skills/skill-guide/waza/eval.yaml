@@ -1,0 +1,12 @@
+name: skill-guide-trigger-eval
+description: Deterministic trigger coverage for skill-guide.
+skill: skill-guide
+version: "1.0"
+config:
+  trials_per_task: 1
+  timeout_seconds: 30
+  parallel: false
+  executor: mock
+  model: mock-model
+tasks:
+  - "tasks/*.yaml"

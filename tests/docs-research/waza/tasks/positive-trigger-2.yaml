@@ -1,0 +1,16 @@
+id: docs-research-positive-002
+name: Investigate version-specific API changes
+description: Research an external CLI or cloud service where version differences and official sources matter.
+tags:
+  - positive-trigger
+inputs:
+  prompt: "Find the version-specific changes and configuration requirements for this cloud API using primary documentation, then list concrete implementation steps and cite sources."
+expected:
+  should_trigger: true
+graders:
+  - type: trigger
+    name: triggers-docs-research-versioned
+    config:
+      skill_path: plugins/docs-research/skills/docs-research/SKILL.md
+      mode: positive
+      threshold: 0.6

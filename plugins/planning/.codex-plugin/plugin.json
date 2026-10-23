@@ -1,0 +1,13 @@
+{
+  "name": "agent-toolkit-planning",
+  "version": "0.1.0",
+  "description": "Durable task journals with explicit next actions, dependencies, and verification evidence.",
+  "skills": "./skills/",
+  "author": { "name": "Agent Toolkit" },
+  "license": "MIT",
+  "interface": {
+    "displayName": "Durable Planning",
+    "shortDescription": "Resume evidence-backed tasks across sessions.",
+    "category": "Productivity"
+  }
+}

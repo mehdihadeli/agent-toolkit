@@ -20,6 +20,11 @@
       "name": "agent-toolkit-skill-guide",
       "source": "../../plugins/skill-guide",
       "version": "0.1.0"
+    },
+    {
+      "name": "agent-toolkit-planning",
+      "source": "../../plugins/planning",
+      "version": "0.1.0"
     }
   ]
 }

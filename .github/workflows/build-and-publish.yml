@@ -1,0 +1,122 @@
+name: Build-Test-Publish
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      run_live_tests:
+        description: Run live Tavily SDK integration tests (consumes API credits)
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-publish-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  TESTINGPLATFORM_TELEMETRY_OPTOUT: 1
+  ENABLED_LIVE_TESTS: ${{ (vars.ENABLED_LIVE_TESTS == 'true' || (github.event_name == 'workflow_dispatch' && inputs.run_live_tests)) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+
+jobs:
+  build-test:
+    name: Build and test .NET plugins
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check release scripts
+        shell: bash
+        run: bash -n scripts/calculate-version.sh scripts/release-version.sh
+
+      - name: Test
+        shell: bash
+        env:
+          TAVILY_RUN_LIVE_TESTS: ${{ env.ENABLED_LIVE_TESTS == 'true' && '1' || '0' }}
+          TAVILY_API_KEY: ${{ env.ENABLED_LIVE_TESTS == 'true' && secrets.TAVILY_API_KEY || '' }}
+        run: |
+          if [[ "$TAVILY_RUN_LIVE_TESTS" == "1" && -z "$TAVILY_API_KEY" ]]; then
+            echo "::error::Set the TAVILY_API_KEY repository secret before enabling live tests."
+            exit 1
+          fi
+          dotnet test --solution agent-toolkit.slnx --configuration Release
+
+  calculate-version:
+    name: Calculate release version
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    needs: build-test
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      assembly_version: ${{ steps.version.outputs.assembly_version }}
+      informational_version: ${{ steps.version.outputs.informational_version }}
+      environment: ${{ steps.version.outputs.environment }}
+      commit: ${{ steps.version.outputs.commit }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Restore local tools
+        run: dotnet tool restore
+
+      - name: Calculate version
+        id: version
+        shell: bash
+        run: bash ./scripts/calculate-version.sh
+
+  publish:
+    name: Update GitHub release
+    needs: calculate-version
+    if: needs.calculate-version.outputs.environment != 'none'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    env:
+      RELEASE_VERSION: ${{ needs.calculate-version.outputs.version }}
+      RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v{0}', needs.calculate-version.outputs.version) }}
+    steps:
+      - name: Update Release Drafter release
+        uses: release-drafter/release-drafter@v7
+        with:
+          config-name: release-drafter.yml
+          version: ${{ env.RELEASE_VERSION }}
+          name: v${{ env.RELEASE_VERSION }}
+          tag: ${{ env.RELEASE_TAG }}
+          commitish: ${{ github.sha }}
+          publish: ${{ startsWith(github.ref, 'refs/tags/v') && needs.calculate-version.outputs.environment == 'production' }}
+          prerelease: ${{ contains(env.RELEASE_VERSION, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

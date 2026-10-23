@@ -1,0 +1,35 @@
+[
+  {
+    "type": "scoped",
+    "constraints": ["Implement only the approved workflow", "Follow existing ownership and design conventions", "Preserve compatibility unless a change is explicitly approved"],
+    "success": ["The primary user workflow works end to end", "Relevant failure and boundary states are covered", "Required checks pass and usage documentation reflects actual behavior"]
+  },
+  {
+    "type": "added",
+    "task": "contract",
+    "title": "Define observable behavior and affected boundaries",
+    "acceptance": "Record inputs, outputs, failure cases, non-goals, and concrete acceptance checks; resolve blocking ambiguities",
+    "dependsOn": []
+  },
+  {
+    "type": "added",
+    "task": "working-slice",
+    "title": "Deliver the smallest complete workflow slice",
+    "acceptance": "The primary workflow executes through its actual entry point with focused passing checks",
+    "dependsOn": ["contract"]
+  },
+  {
+    "type": "added",
+    "task": "resilience",
+    "title": "Cover failure, boundary, and integration behavior",
+    "acceptance": "Relevant invalid input, external failure, and boundary checks pass without regressions in existing callers",
+    "dependsOn": ["working-slice"]
+  },
+  {
+    "type": "added",
+    "task": "delivery-review",
+    "title": "Review compatibility, documentation, and delivery checks",
+    "acceptance": "Required repository checks pass; documentation matches the delivered workflow; remaining limitations are explicit",
+    "dependsOn": ["resilience"]
+  }
+]

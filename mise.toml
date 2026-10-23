@@ -1,0 +1,113 @@
+[env]
+VALLY = "node ./node_modules/@microsoft/vally-cli/dist/index.js"
+VALLY_EVAL_RUNNER = "./tools/run-vally.sh"
+WAZA_EVAL_RUNNER = "./tools/run-waza.sh"
+VALLY_SUITE = "plugin-evals"
+VALLY_WORKERS = "1"
+VALLY_RUNS = "1"
+VALLY_PROCESSES = "1"
+
+[tools]
+node = "22.12"
+
+[tasks.install]
+description = "Install pinned repository dependencies"
+run = "npm ci"
+
+[tasks.validate]
+description = "Validate repository metadata, paths, and links"
+run = "python tools/validate_repository.py"
+
+[tasks.harness-install]
+description = "Install canonical skills into one or more coding tools"
+run = "node tools/harness-install.mjs install"
+
+[tasks.harness-uninstall]
+description = "Remove unchanged skills owned by this checkout"
+run = "node tools/harness-install.mjs uninstall"
+
+[tasks.harness-doctor]
+description = "Check owned skill installations without changing files"
+run = "node tools/harness-install.mjs doctor"
+
+[tasks.harness-test]
+description = "Test multi-host installation and ownership safeguards"
+run = ["node --test tests/harness-install/*.test.mjs", "python -m unittest discover -s tests/harness-install -p 'test_*.py' -v"]
+
+[tasks.harness-generate]
+description = "Generate native OpenCode, Copilot, and Antigravity artifacts"
+run = "python tools/generate.py --harness all"
+
+[tasks.harness-validate-generated]
+description = "Check native artifact ownership and source drift without writing"
+run = "python tools/validate_generated.py --harness all"
+
+[tasks.planning-test]
+description = "Run deterministic planning runtime and evaluation-grader tests"
+run = "node --test tests/planning/scripts/durable-plans/*.test.mjs"
+
+[tasks.vally-lint]
+description = "Lint skills and Vally evaluation configuration"
+run = "node ./node_modules/@microsoft/vally-cli/dist/index.js lint ."
+
+[tasks.vally-eval]
+description = "Run the complete Vally suite with Copilot and Claude"
+run = "bash -c 'copilot_status=0; mise run vally-eval-copilot-local || copilot_status=$?; claude_status=0; mise run vally-eval-claude-local || claude_status=$?; exit $((copilot_status || claude_status))'"
+
+[tasks.vally-eval-copilot]
+description = "Run the local Copilot evaluation"
+depends = ["vally-eval-copilot-local"]
+run = "true"
+
+[tasks.vally-preflight-copilot-local]
+description = "Check local Copilot evaluation credentials and executable"
+run = "bash -c 'VALLY_PREFLIGHT_ONLY=1 VALLY_PREFLIGHT_API=1 ./tools/run-vally.sh copilot-sdk local'"
+
+[tasks.vally-preflight-copilot-ci]
+description = "Check CI Copilot evaluation credentials and executable"
+run = "bash -c 'VALLY_PREFLIGHT_ONLY=1 VALLY_PREFLIGHT_API=1 ./tools/run-vally.sh copilot-sdk ci'"
+
+[tasks.vally-eval-copilot-local]
+description = "Run local Vally evaluations with Copilot"
+depends = ["vally-preflight-copilot-local"]
+run = "bash ./tools/run-vally.sh copilot-sdk local"
+
+[tasks.vally-eval-copilot-ci]
+description = "Run CI Vally evaluations with Copilot"
+depends = ["vally-preflight-copilot-ci"]
+run = "bash ./tools/run-vally.sh copilot-sdk ci"
+
+[tasks.vally-eval-claude]
+description = "Run the local Claude evaluation"
+depends = ["vally-eval-claude-local"]
+run = "true"
+
+[tasks.vally-eval-claude-cli]
+description = "Run the local Claude evaluation"
+depends = ["vally-eval-claude-local"]
+run = "true"
+
+[tasks.waza-eval]
+description = "Run Waza evaluations locally; set WAZA_SKILL to select one"
+run = "bash ./tools/run-waza.sh local"
+
+[tasks.waza-eval-ci]
+description = "Run Waza evaluations in CI; set WAZA_SKILL to select one"
+run = "bash ./tools/run-waza.sh ci"
+
+[tasks.vally-eval-claude-local]
+description = "Run local Vally evaluations with Claude"
+run = "bash ./tools/run-vally.sh claude-cli local"
+
+[tasks.vally-eval-claude-default-local]
+description = "Run local Claude evaluations using the spec default executor"
+run = "bash ./tools/run-vally.sh claude-cli-default local"
+
+[tasks.vally-eval-claude-ci]
+description = "Run CI Vally evaluations with Claude"
+run = "bash ./tools/run-vally.sh claude-cli ci"
+
+[tasks.check]
+description = "Run repository validation, Vally lint, and installer tests"
+depends = ["validate", "vally-lint", "harness-test"]
+run = "true"

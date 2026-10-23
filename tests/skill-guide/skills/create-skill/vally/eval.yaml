@@ -1,0 +1,140 @@
+name: create_skill
+version: "1.0"
+type: capability
+tags:
+  area: authoring
+  type: skill
+environment:
+  skills:
+    - ../../../plugins/skill-guide/skills/create-skill
+defaults:
+  runs: 1
+  timeout: 2m
+  model: deepseek-v4-flash
+  executor:
+    name: copilot-sdk
+    config:
+      provider:
+        type: openai
+        baseUrl: https://api.deepseek.com/v1
+        apiKeyEnv: OPENAI_API_KEY
+stimuli:
+  - name: dry-run-before-creation
+    prompt: |
+      Use create-skill to add release-notes-helper to the skill-guide plugin.
+      This turn is preview only. Explain repository discovery, show the exact
+      dry-run command, and explain the approval boundary. Do not write files or
+      run network calls.
+    rubric:
+      - Discovers repository configuration or conventions before choosing paths.
+      - Shows create-skill with --dry-run before any apply.
+      - Requires the unchanged plan hash for one approved apply.
+      - Performs no write or network call.
+    graders:
+      - type: prompt
+        name: plans-before-writing
+        config:
+          scoring: scale_1_5
+          threshold: 0.75
+          prompt: >-
+            Score 5 only if the response discovers configuration or conventions,
+            shows an exact dry-run command, requires approval of its hash, and
+            performs no write or network call. Score 1 if it writes first or
+            guesses an ambiguous registration.
+      - type: output-contains
+        name: preview workflow
+        config:
+          substring: preview
+          case_sensitive: false
+      - type: output-contains
+        name: approval hash
+        config:
+          substring: hash
+          case_sensitive: false
+    constraints:
+      max_turns: 6
+      max_tokens: 2500
+      max_duration: 75s
+      max_agent_duration: 60s
+      expect_skills: [create-skill]
+
+  - name: source-only-boundary
+    prompt: |
+      Use create-skill to prepare release-notes-helper. Explain exactly which
+      files the generator owns and which repository surfaces remain manual.
+      Include the preview command, but do not write files.
+    rubric:
+      - States that creation owns SKILL.md and README.md only.
+      - Keeps tests, evaluations, and registration as explicit follow-up work.
+      - Shows a dry-run preview and requires the returned approval hash.
+      - Does not invent image, provider, or network steps.
+    graders:
+      - type: prompt
+        name: preserves-source-boundary
+        config:
+          scoring: scale_1_5
+          threshold: 0.75
+          prompt: >-
+            Score 5 only if the response describes source-only generation,
+            names the manual repository surfaces, and uses preview plus hash
+            approval. Score 1 if it adds image generation or external actions.
+      - type: output-contains
+        name: source-files
+        config:
+          substring: SKILL.md
+          case_sensitive: false
+      - type: output-contains
+        name: preview-boundary
+        config:
+          substring: dry-run
+          case_sensitive: false
+    constraints:
+      max_turns: 6
+      max_tokens: 2500
+      max_duration: 75s
+      max_agent_duration: 60s
+      expect_skills: [create-skill]
+
+  - name: deterministic-fixture-contract
+    prompt: |
+      A repository generator must create example-skill from a version 1 JSON
+      fixture. Explain the exact create-skill fixture preview and apply
+      commands, including the target repository root. Do not invent a second
+      renderer and do not write files in this turn.
+    rubric:
+      - Uses create-skill fixture with --input, --repo-root, and --dry-run.
+      - Repeats the unchanged fixture command with the returned approval hash.
+      - Uses the normal renderer, validation, and atomic apply path.
+      - Does not hand-build the example skill.
+    graders:
+      - type: prompt
+        name: reuses-stable-fixture-mode
+        config:
+          scoring: scale_1_5
+          threshold: 0.75
+          prompt: >-
+            Score 5 only if the response shows fixture mode with input,
+            repository root, dry-run, and unchanged hash approval while reusing
+            the normal create-skill path. Score 1 if it hand-builds the fixture
+            or bypasses preview and approval.
+      - type: output-contains
+        name: fixture-command
+        config:
+          substring: fixture
+          case_sensitive: false
+      - type: output-contains
+        name: repository-root
+        config:
+          substring: repo-root
+          case_sensitive: false
+    constraints:
+      max_turns: 6
+      max_tokens: 2500
+      max_duration: 75s
+      max_agent_duration: 60s
+      expect_skills: [create-skill]
+scoring:
+  weights:
+    prompt: 0.7
+    output-contains: 0.3
+  threshold: 0.8

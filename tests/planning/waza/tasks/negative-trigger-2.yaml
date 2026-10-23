@@ -1,0 +1,15 @@
+id: durable-plans-negative-002
+name: Discuss an approach without files
+description: A conversational plan must not create persistent task artifacts.
+tags: [negative-trigger]
+inputs:
+  prompt: "Brainstorm a possible refactoring plan in this chat only. Do not write files or start implementation."
+expected:
+  should_trigger: false
+graders:
+  - type: trigger
+    name: respects-chat-only-planning
+    config:
+      skill_path: plugins/planning/skills/durable-plans/SKILL.md
+      mode: negative
+      threshold: 0.9

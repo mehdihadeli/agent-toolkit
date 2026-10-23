@@ -354,6 +354,12 @@ paket-files/
 **/__pycache__/
 *.pyc
 
+# Native harness projections (canonical source stays under plugins/)
+/.opencode/
+/.copilot/
+/.antigravity/
+/.agent-toolkit-*.lock
+
 # Cake - Uncomment if you are using it
 #tools/**
 #!tools/packages.config
@@ -518,3 +524,4 @@ http-client.private.env.json
 .idea/**/copilot.data.migration.*.xml
 .work/***
 session-state/**
+.planning

@@ -3,6 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "description": "Pinned Node.js tools used by Agent Toolkit evaluations.",
+  "workspaces": ["docs"],
+  "scripts": {
+    "harness": "node tools/harness-install.mjs",
+    "harness:test": "node --test tests/harness-install/*.test.mjs",
+    "docs:dev": "npm run dev --workspace @agent-toolkit/docs --",
+    "docs:build": "npm run build --workspace @agent-toolkit/docs",
+    "docs:test": "npm run test --workspace @agent-toolkit/docs"
+  },
   "devDependencies": {
     "@anthropic-ai/claude-code": "2.1.267",
     "@github/copilot": "1.0.83",

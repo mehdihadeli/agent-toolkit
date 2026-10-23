@@ -37,3 +37,27 @@ Current examples:
 ## Evaluation
 
 Add a Vally evaluation under `tests/<plugin>/vally/` for behavior that can be exercised through a prompt. Run `vally lint .` and a focused `vally eval` before publishing.
+
+## Optional executable support
+
+A skill may include deterministic scripts when instructions alone are not enough:
+
+```text
+plugins/<plugin>/skills/<skill-name>/
+├── SKILL.md
+├── references/       # optional supporting material
+├── scripts/          # optional production scripts
+└── package.json      # only when Node tooling needs its own dependencies
+
+tests/<plugin>/scripts/<skill-name>/  # script tests and fixtures
+```
+
+Use `.mjs` by default for skill and plugin-management scripts. Use Python for
+domain-specific document or image processing when its libraries are stronger.
+Use C# for MCP servers, standalone agents, hosted workflows, Copilot SDK, or
+substantial .NET integrations. Keep shared repository tooling in the root
+`package.json`; do not add a package file to instruction-only skills.
+
+Script tests belong under `tests/<plugin>/scripts/` and should test the executable
+contract directly. Keep them separate from Vally prompt evaluations and Waza
+trigger tests.

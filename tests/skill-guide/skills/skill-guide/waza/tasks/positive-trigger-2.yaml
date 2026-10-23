@@ -1,0 +1,16 @@
+id: skill-guide-positive-002
+name: Review an existing skill
+description: Request a review of skill scope, progressive disclosure, secrets, host conflicts, and testing.
+tags:
+  - positive-trigger
+inputs:
+  prompt: "Review this existing agent skill for activation scope, progressive disclosure, duplicated instructions, secrets, host conflicts, and realistic validation coverage."
+expected:
+  should_trigger: true
+graders:
+  - type: trigger
+    name: triggers-skill-guide-review
+    config:
+      skill_path: plugins/skill-guide/skills/skill-guide/SKILL.md
+      mode: positive
+      threshold: 0.6

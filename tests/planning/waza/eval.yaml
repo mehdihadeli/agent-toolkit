@@ -1,0 +1,12 @@
+name: durable-plans-trigger-eval
+description: Deterministic routing coverage for persistent task tracking and recovery.
+skill: durable-plans
+version: "1.0"
+config:
+  trials_per_task: 1
+  timeout_seconds: 30
+  parallel: false
+  executor: mock
+  model: mock-model
+tasks:
+  - "tasks/*.yaml"

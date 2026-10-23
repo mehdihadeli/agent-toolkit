@@ -4,11 +4,13 @@ paths:
   skills:
     - plugins/docs-research/skills
     - plugins/skill-guide/skills
+    - plugins/planning/skills
   evals:
     - tests/docs-research/vally
     - tests/dotnet-quality/vally
     - tests/search/vally
-    - tests/skill-guide/vally
+    - tests/skill-guide/skills
+    - tests/planning/vally
   results: .work/vally/results
   evalFilenames:
     - eval.yaml

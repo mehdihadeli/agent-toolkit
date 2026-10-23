@@ -1,0 +1,16 @@
+id: create-skill-positive-001
+name: Scaffold a new skill
+description: Use create-skill for a new skill scaffold.
+tags:
+  - positive-trigger
+inputs:
+  prompt: "Create a new agent skill called release-notes with a preview-first scaffold, README, and validation steps."
+expected:
+  should_trigger: true
+graders:
+  - type: trigger
+    name: triggers-create-skill
+    config:
+      skill_path: plugins/skill-guide/skills/create-skill/SKILL.md
+      mode: positive
+      threshold: 0.6

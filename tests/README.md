@@ -8,6 +8,15 @@ Each plugin owns its tests under `tests/<plugin>/`:
 
 Skill-only plugins such as `docs-research` and `skill-guide` use `vally/` without .NET test projects. .NET plugins such as `search` and `dotnet-quality` use xUnit v3 projects under `unit-tests/` and `integration-tests/`.
 
+The [Planning plugin](../plugins/planning/README.md) adds deterministic Node.js
+runtime, hook, example, template, and grader tests under `planning/scripts/durable-plans/`, eight state-based
+Vally scenarios under `planning/vally/`, and Waza routing checks under
+`planning/waza/`. Run its deterministic tests with:
+
+```bash
+node --test tests/planning/scripts/durable-plans/*.test.mjs
+```
+
 Run all .NET plugin and test projects together from repository root:
 
 ```bash
@@ -17,15 +26,15 @@ dotnet test --solution agent-toolkit.slnx
 Run static validation from repository root:
 
 ```bash
-make vally-lint
+mise run vally-lint
 ```
 
 Vally's Copilot executor and CLI use pinned root Node dependencies. Run
-`npm ci` before local evaluations, then use the Makefile targets so Vally
+`mise install` and `npm ci` before local evaluations, then use the mise tasks so Vally
 resolves the repository-local Copilot platform package.
 
-To use a globally installed Vally CLI instead, run `make VALLY=vally
-vally-eval`; the Makefile still configures the native Copilot executable.
+To use a globally installed Vally CLI instead, set `VALLY=vally` and run
+`mise run vally-eval`; the task still configures the native Copilot executable.
 
 ## Vally BYOK configuration
 
@@ -78,7 +87,7 @@ defaults:
 The Claude executor accepts `apiKeyEnv` as an environment-variable name, but
 does not interpolate `baseUrl: ANTHROPIC_BASE_URL`. Omitting `model` and
 `baseUrl` instead lets Claude Code use inherited `ANTHROPIC_MODEL` and
-`ANTHROPIC_BASE_URL` values loaded by the Make wrapper.
+`ANTHROPIC_BASE_URL` values loaded by the mise task wrapper.
 
 Copilot BYOK cannot use `OPENAI_MODEL` or `OPENAI_BASE_URL` as placeholder
 values in the eval. Keep the model and absolute base URL literal, and use
@@ -105,27 +114,27 @@ defaults:
 Run that file with Copilot without an override:
 
 ```bash
-make vally-eval-copilot-local \
-  VALLY_EVAL_SPEC=tests/dotnet-quality/vally/quality/eval.yaml
+VALLY_EVAL_SPEC=tests/dotnet-quality/vally/quality/eval.yaml \
+  mise run vally-eval-copilot-local
 ```
 
 Run the same file with Claude by passing the Claude executor through the
 command:
 
 ```bash
-make vally-eval-claude-local \
-  VALLY_EVAL_SPEC=tests/dotnet-quality/vally/quality/eval.yaml
+VALLY_EVAL_SPEC=tests/dotnet-quality/vally/quality/eval.yaml \
+  mise run vally-eval-claude-local
 ```
 
 The Claude target passes `--executor claude-cli` to Vally. That command-line
 executor overrides `defaults.executor`, so the YAML does not need to change.
-Claude uses its own inherited `ANTHROPIC_*` configuration loaded by the Make
+Claude uses its own inherited `ANTHROPIC_*` configuration loaded by the mise
 wrapper. This supports running one shared eval spec with both executors.
 
 Run one suite with GitHub Copilot:
 
 ```bash
-make vally-eval
+mise run vally-eval
 ```
 
 Run the same suite with Claude Code after building the local executor:
@@ -138,29 +147,30 @@ cd ../..
 npm ci
 npm run build --prefix tools/vally-executor-claude
 claude login
-make vally-eval-claude
+mise run vally-eval-claude
 ```
 
 Claude evaluations support two executor-selection approaches:
 
-1. Pass the executor through the Vally command. `make vally-eval-claude-local`
+1. Pass the executor through the Vally command. `mise run vally-eval-claude-local`
    invokes Vally with `--executor claude-cli`; this overrides the executor in
    the eval spec.
 2. Select the executor in the eval spec. Set
    `defaults.executor: claude-cli`, then run
-   `make vally-eval-claude-default-local`. This target omits `--executor` from
+   `mise run vally-eval-claude-default-local`. This task omits `--executor` from
    the Vally command, so Vally uses the eval's default executor.
 
 The second target requires `VALLY_EVAL_SPEC`, for example:
 
 ```bash
-make vally-eval-claude-default-local \
-  VALLY_EVAL_SPEC=tests/dotnet-quality/vally/quality/eval.yaml
+VALLY_EVAL_SPEC=tests/dotnet-quality/vally/quality/eval.yaml \
+  mise run vally-eval-claude-default-local
 ```
 
 The same executor pair applies to every Vally category:
 
-- Skills: `tests/docs-research/vally/eval.yaml` and `tests/skill-guide/vally/eval.yaml`.
+- Skills: `tests/docs-research/vally/eval.yaml` and
+  `tests/skill-guide/skills/skill-guide/vally/eval.yaml`.
 - Agent: `tests/dotnet-quality/vally/agent/eval.yaml` and `tests/dotnet-quality/vally/quality/eval.yaml`.
 - MCP: `tests/search/vally/mcp/eval.yaml`.
 

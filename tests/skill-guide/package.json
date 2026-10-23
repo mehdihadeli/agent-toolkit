@@ -1,0 +1,17 @@
+{
+  "name": "@agent-toolkit/skill-guide-tests",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Script tests and Vally evaluations for the skill-guide plugin.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "check": "node ../../plugins/skill-guide/skills/create-skill/scripts/forge-skill.mjs check create-skill",
+    "test": "node --test skills/create-skill/scripts/*.test.mjs",
+    "test:coverage": "node --test --experimental-test-coverage skills/create-skill/scripts/*.test.mjs",
+    "eval:lint": "vally lint --eval-spec skills/create-skill/vally/eval.yaml --strict",
+    "eval": "vally eval --eval-spec skills/create-skill/vally/eval.yaml --skill-dir ../../plugins/skill-guide/skills/create-skill"
+  }
+}

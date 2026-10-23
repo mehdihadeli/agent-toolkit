@@ -1,0 +1,16 @@
+id: dotnet-quality-negative-001
+name: Implement unrelated feature
+description: Do not use the quality agent for ordinary feature implementation unrelated to dotnet format analysis.
+tags:
+  - negative-trigger
+inputs:
+  prompt: "Implement a new HTTP endpoint and add business logic tests. This request is unrelated to analyzing .NET formatting, style, or analyzer technical debt."
+expected:
+  should_trigger: false
+graders:
+  - type: trigger
+    name: does-not-trigger-dotnet-quality-agent
+    config:
+      skill_path: .github/agents/dotnet-quality.agent.md
+      mode: negative
+      threshold: 0.9

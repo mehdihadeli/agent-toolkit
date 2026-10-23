@@ -1,0 +1,34 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { reduceEvent } from '../../../../plugins/planning/skills/durable-plans/scripts/plan.mjs';
+
+test('worked example JSON obeys the documented task states', () => {
+  const source = readFileSync(new URL('../../../../plugins/planning/skills/durable-plans/examples.md', import.meta.url), 'utf8');
+  const snippets = [...source.matchAll(/```json\r?\n([\s\S]*?)\r?\n```/g)].map(match => JSON.parse(match[1]));
+  assert.equal(snippets.length, 4);
+  let state = reduceEvent(undefined, { type: 'created', goal: 'Validate example state transitions' });
+  const record = event => { state = reduceEvent(state, event); };
+  const add = (task, dependsOn = []) => record({ type: 'added', task, title: task, acceptance: 'Example fixture check', dependsOn });
+  add('isolate');
+  record({ type: 'started', task: 'isolate', next: 'Inspect controlled fixture' });
+  for (const event of snippets[0]) record(event);
+  assert.match(state.tasks.isolate.lastProgress.summary, /duplicate dispatch/);
+  add('correct');
+  record(snippets[1]);
+  assert.match(state.decisions['receipt-claim-order'].rationale, /overlap/);
+  record({ type: 'blocked', task: 'isolate', reason: 'Example segment complete', next: 'Resume separately' });
+  add('working-slice');
+  add('resilience', ['working-slice']);
+  record({ type: 'started', task: 'working-slice', next: 'Check example workflow' });
+  record({ type: 'verified', task: 'working-slice', passed: true, evidence: 'Example fixture only; not a claim about user code' });
+  record({ type: 'completed', task: 'working-slice' });
+  record({ type: 'started', task: 'resilience', next: 'Review cancellation case' });
+  record(snippets[2]);
+  assert.equal(state.tasks.resilience.status, 'pending');
+  add('rehearsal');
+  record({ type: 'started', task: 'rehearsal', next: 'Check disposable broker access' });
+  record(snippets[3]);
+  assert.equal(state.tasks.rehearsal.status, 'blocked');
+  assert.equal(state.closure, null);
+});

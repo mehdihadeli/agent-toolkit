@@ -1,0 +1,16 @@
+id: skill-guide-positive-001
+name: Design a new agent skill
+description: Ask for the structure, frontmatter, workflow, and validation plan for a new skill.
+tags:
+  - positive-trigger
+inputs:
+  prompt: "Help me design a new agent skill. Include its SKILL.md frontmatter, trigger description, ordered workflow, output contract, and validation checklist."
+expected:
+  should_trigger: true
+graders:
+  - type: trigger
+    name: triggers-skill-guide
+    config:
+      skill_path: plugins/skill-guide/skills/skill-guide/SKILL.md
+      mode: positive
+      threshold: 0.6

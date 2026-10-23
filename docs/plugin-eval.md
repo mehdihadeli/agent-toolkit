@@ -7,7 +7,7 @@ This repository uses Vally for static validation and prompt-driven evaluation.
 From repository root:
 
 ```bash
-make vally-lint
+mise run vally-lint
 ```
 
 Root `.vally.yaml` discovers evaluation files under `tests/*/vally/` and groups them in the `plugin-evals` suite.
@@ -32,15 +32,15 @@ Run the complete local evaluation with both executors after installing repositor
 
 ```bash
 npm ci
-make vally-eval
+mise run vally-eval
 ```
 
-`make vally-eval` runs the complete suite with Copilot SDK, then runs the same
+`mise run vally-eval` runs the complete suite with Copilot SDK, then runs the same
 suite with Claude Code. It continues to Claude Code when Copilot has failures
 and returns a nonzero status if either executor fails. Build the Claude
 executor and authenticate Claude Code before using this combined target.
 
-Local Make targets load variables from the repository root `.env` when it
+Local mise tasks load variables from the repository root `.env` when it
 exists. Variables already exported by the operating system take precedence;
 set `VALLY_ENV_FILE` to use a different file. CI targets do not read `.env`
 and use exported CI variables only. Vally runs default with `LOG_LEVEL=debug`,
@@ -53,7 +53,7 @@ Run the same spec through Claude Code with the repository executor:
 npm ci
 npm run build --prefix tools/vally-executor-claude
 claude login
-make vally-eval-claude
+mise run vally-eval-claude
 ```
 
 Use these executor commands for skill, agent, and MCP specs. Vally selects one
@@ -79,20 +79,20 @@ environment and do not need manual MCP startup.
 Search MCP evaluations require the local server and provider credentials:
 
 ```bash
-make vally-eval VALLY_EVAL_SPEC=tests/search/vally/mcp/eval.yaml
+VALLY_EVAL_SPEC=tests/search/vally/mcp/eval.yaml mise run vally-eval
 ```
 
 Search MCP stimuli are tagged by priority and cost. Run the two fast smoke
 checks during inner-loop development:
 
 ```bash
-make VALLY=vally VALLY_SUITE=search-smoke vally-eval
+VALLY=vally VALLY_SUITE=search-smoke mise run vally-eval
 ```
 
 Run complete Search MCP coverage in CI:
 
 ```bash
-make VALLY=vally VALLY_SUITE=search-ci vally-eval
+VALLY=vally VALLY_SUITE=search-ci mise run vally-eval
 ```
 
 Vally captures trajectories, token usage, tool calls, and wall time in the
@@ -113,7 +113,7 @@ runner continues after failures and exits nonzero if any eval fails.
 Increase confidence with repeated trials inside each isolated process instead:
 
 ```bash
-make VALLY=vally VALLY_SUITE=search-smoke VALLY_RUNS=3 vally-eval
+VALLY=vally VALLY_SUITE=search-smoke VALLY_RUNS=3 mise run vally-eval
 ```
 
 ## Evaluation rules
