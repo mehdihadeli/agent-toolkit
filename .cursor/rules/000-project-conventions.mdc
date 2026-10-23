@@ -1,0 +1,19 @@
+---
+description: Repository conventions for authoring and maintaining Agent Toolkit plugins and host adapters.
+alwaysApply: true
+---
+
+Read AGENTS.md for repository boundaries and quality gates. Keep canonical
+skills, agents, commands, and executable projects inside their owning plugin.
+
+Claude, Codex, and Cursor marketplace registrations must resolve to the same
+plugin directories and agree on plugin names and versions. Host metadata is
+not a second implementation tree.
+
+Native projections under .opencode/, .copilot/, and .antigravity/ are generated
+and ignored. Change their canonical source or Python adapter, never the output.
+Run focused harness tests and generation checks after changing host adapters.
+
+Preserve read-only MCP and quality-agent boundaries. Do not port Claude hooks,
+register MCP servers, change user settings, or install globally without an
+explicit request. Test installers against temporary targets and use dry runs.

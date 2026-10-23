@@ -44,7 +44,10 @@ def read_json(path: Path, findings: list[Finding]) -> dict | None:
 def resolve_source(root: Path, manifest_path: Path, source: str) -> Path | None:
     if not isinstance(source, str) or not source:
         return None
-    if manifest_path == root / ".claude-plugin" / "marketplace.json":
+    if manifest_path in (
+        root / ".claude-plugin" / "marketplace.json",
+        root / ".cursor-plugin" / "marketplace.json",
+    ):
         return (root / source).resolve()
     return (manifest_path.parent / source).resolve()
 
@@ -116,6 +119,7 @@ def validate_plugin_manifests(
         manifests = [
             plugin_path / ".claude-plugin" / "plugin.json",
             plugin_path / ".codex-plugin" / "plugin.json",
+            plugin_path / ".cursor-plugin" / "plugin.json",
         ]
         local_values: dict[str, str] = {}
         for manifest_path in manifests:
@@ -132,7 +136,7 @@ def validate_plugin_manifests(
             if not isinstance(version, str) or not version:
                 findings.append(Finding(manifest_path, "missing non-empty version"))
             if isinstance(name, str) and isinstance(version, str):
-                local_values[manifest_path.parent.parent.name] = f"{name}\n{version}"
+                local_values[manifest_path.parent.name] = f"{name}\n{version}"
                 marketplace_value = known_paths.get(plugin_path.resolve())
                 if marketplace_value is None:
                     findings.append(Finding(manifest_path, "plugin is not registered in marketplace"))
@@ -140,7 +144,7 @@ def validate_plugin_manifests(
                     findings.append(Finding(manifest_path, "name/version differs from marketplace registration"))
 
         if len(set(local_values.values())) > 1:
-            findings.append(Finding(plugin_path, "Claude and Codex manifests disagree on name/version"))
+            findings.append(Finding(plugin_path, "Claude, Codex, and Cursor manifests disagree on name/version"))
 
         skills_dir = plugin_path / "skills"
         if skills_dir.is_dir():
@@ -174,6 +178,48 @@ def validate_markdown_links(root: Path, findings: list[Finding]) -> None:
                 findings.append(Finding(markdown_path, f"dead local link: {raw_target}"))
 
 
+def validate_waza_coverage(root: Path, findings: list[Finding]) -> None:
+    expected: list[tuple[str, str, Path]] = []
+    plugins_dir = root / "plugins"
+    for skill_path in sorted(plugins_dir.glob("*/skills/*/SKILL.md")):
+        expected.append((skill_path.parents[2].name, skill_path.parent.name, skill_path))
+
+    for agent_path in sorted((root / ".github" / "agents").glob("*.agent.md")):
+        expected.append((agent_path.stem.removesuffix(".agent"), agent_path.stem.removesuffix(".agent"), agent_path))
+
+    for plugin_name, name, source_path in expected:
+        candidates = [
+            root / "tests" / plugin_name / "skills" / name / "waza" / "eval.yaml",
+            root / "tests" / plugin_name / "waza" / name / "eval.yaml",
+            root / "tests" / plugin_name / "waza" / "eval.yaml",
+            root / "tests" / name / "waza" / "eval.yaml",
+        ]
+        eval_path = next((path for path in candidates if path.is_file()), candidates[0])
+        if not eval_path.is_file():
+            findings.append(Finding(eval_path, f"missing Waza eval for {source_path.relative_to(root)}"))
+            continue
+
+        try:
+            content = eval_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as error:
+            findings.append(Finding(eval_path, f"cannot read Waza eval: {error}"))
+            continue
+
+        if not re.search(rf"^skill:\s*{re.escape(name)}\s*$", content, re.MULTILINE):
+            findings.append(Finding(eval_path, f"Waza eval skill must be {name!r}"))
+        if not re.search(r"^\s*executor:\s*mock\s*$", content, re.MULTILINE):
+            findings.append(Finding(eval_path, "Waza CI eval must use the mock executor"))
+
+        task_dir = eval_path.parent / "tasks"
+        task_files = sorted(task_dir.glob("*.yaml"))
+        positive_count = sum("positive" in path.stem for path in task_files)
+        negative_count = sum("negative" in path.stem for path in task_files)
+        if positive_count < 2:
+            findings.append(Finding(task_dir, "Waza coverage requires at least two positive trigger tasks"))
+        if negative_count < 1:
+            findings.append(Finding(task_dir, "Waza coverage requires at least one negative trigger task"))
+
+
 def validate(root: Path) -> list[Finding]:
     findings: list[Finding] = []
     claude = validate_marketplace(
@@ -188,12 +234,24 @@ def validate(root: Path) -> list[Finding]:
         "marketplace.json",
         findings,
     )
+    cursor = validate_marketplace(
+        root,
+        root / ".cursor-plugin" / "marketplace.json",
+        "marketplace.json",
+        findings,
+    )
     if set(claude) != set(codex):
         findings.append(Finding(root, "Claude and Codex marketplaces register different plugin names"))
     for name in sorted(set(claude) & set(codex)):
         if claude[name][0] != codex[name][0]:
             findings.append(Finding(root, f"marketplace version differs for plugin {name!r}"))
+    if set(claude) != set(cursor):
+        findings.append(Finding(root, "Claude and Cursor marketplaces register different plugin names"))
+    for name in sorted(set(claude) & set(cursor)):
+        if claude[name] != cursor[name]:
+            findings.append(Finding(root, f"Cursor marketplace version/source differs for plugin {name!r}"))
     validate_plugin_manifests(root, claude, findings)
+    validate_waza_coverage(root, findings)
     validate_markdown_links(root, findings)
     return findings
 

@@ -1,0 +1,59 @@
+name: Harness compatibility
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.claude-plugin/**'
+      - '.agents/plugins/**'
+      - '.cursor-plugin/**'
+      - '.cursor/**'
+      - 'plugins/**'
+      - 'tools/**'
+      - 'tests/harness-install/**'
+      - 'Makefile'
+      - '.github/workflows/harness-tests.yml'
+  pull_request:
+    paths:
+      - '.claude-plugin/**'
+      - '.agents/plugins/**'
+      - '.cursor-plugin/**'
+      - '.cursor/**'
+      - 'plugins/**'
+      - 'tools/**'
+      - 'tests/harness-install/**'
+      - 'Makefile'
+      - '.github/workflows/harness-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  harnesses:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Install adapter dependencies
+        run: python -m pip install -r tools/requirements.txt
+      - name: Test Python installers and adapters
+        run: python -m unittest discover -s tests/harness-install -p 'test_*.py' -v
+      - name: Test existing Node installer
+        run: node --test tests/harness-install/installer.test.mjs
+      - name: Validate marketplace metadata
+        run: python tools/validate_repository.py
+      - name: Generate native artifacts
+        run: python tools/generate.py --harness all
+      - name: Check native output and source drift
+        run: python tools/validate_generated.py --harness all

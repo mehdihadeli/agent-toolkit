@@ -1,0 +1,10 @@
+{
+  "name": "agent-toolkit-planning",
+  "version": "0.1.0",
+  "description": "Durable task journals with explicit next actions, dependencies, and verification evidence. Manual resume on Cursor.",
+  "author": { "name": "Agent Toolkit" },
+  "license": "MIT",
+  "skills": "./skills/",
+  "agents": [],
+  "hooks": { "hooks": {} }
+}

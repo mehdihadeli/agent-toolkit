@@ -1,0 +1,10 @@
+{
+  "name": "agent-toolkit-search",
+  "version": "0.1.0",
+  "description": "Bounded Search MCP service. Build and configure the MCP endpoint explicitly; marketplace installation does not start it.",
+  "author": { "name": "Agent Toolkit" },
+  "license": "MIT",
+  "skills": [],
+  "agents": [],
+  "hooks": { "hooks": {} }
+}

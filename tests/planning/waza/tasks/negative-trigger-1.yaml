@@ -1,0 +1,15 @@
+id: durable-plans-negative-001
+name: Explain a local expression
+description: Quick answers do not need durable task tracking.
+tags: [negative-trigger]
+inputs:
+  prompt: "Explain why this JavaScript equality expression returns false. Answer briefly; do not create files or track tasks."
+expected:
+  should_trigger: false
+graders:
+  - type: trigger
+    name: avoids-one-step-explanation
+    config:
+      skill_path: plugins/planning/skills/durable-plans/SKILL.md
+      mode: negative
+      threshold: 0.9

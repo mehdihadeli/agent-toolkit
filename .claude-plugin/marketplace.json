@@ -29,6 +29,12 @@
       "source": "./plugins/skill-guide",
       "version": "0.1.0",
       "category": "authoring"
+    },
+    {
+      "name": "agent-toolkit-planning",
+      "source": "./plugins/planning",
+      "version": "0.1.0",
+      "category": "productivity"
     }
   ]
 }

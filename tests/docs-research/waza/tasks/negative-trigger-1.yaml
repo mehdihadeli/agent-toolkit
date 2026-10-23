@@ -1,0 +1,16 @@
+id: docs-research-negative-001
+name: Explain local code without external documentation
+description: Do not use docs-research for a self-contained explanation of code already provided in the prompt.
+tags:
+  - negative-trigger
+inputs:
+  prompt: "Explain this short local function and suggest clearer variable names. No external library or current documentation is involved."
+expected:
+  should_trigger: false
+graders:
+  - type: trigger
+    name: does-not-trigger-docs-research
+    config:
+      skill_path: plugins/docs-research/skills/docs-research/SKILL.md
+      mode: negative
+      threshold: 0.9

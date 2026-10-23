@@ -1,0 +1,16 @@
+id: dotnet-quality-positive-002
+name: Review analyzer warnings
+description: Ask the custom agent to review analyzer warnings without changing files.
+tags:
+  - positive-trigger
+inputs:
+  prompt: "Review the analyzer warnings in this .NET solution, group them by impact and affected files, and recommend next steps. Keep the analysis read-only and do not modify files."
+expected:
+  should_trigger: true
+graders:
+  - type: trigger
+    name: triggers-dotnet-quality-agent-for-analyzer-review
+    config:
+      skill_path: .github/agents/dotnet-quality.agent.md
+      mode: positive
+      threshold: 0.6

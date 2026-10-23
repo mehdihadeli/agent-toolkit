@@ -1,0 +1,28 @@
+[
+  {
+    "type": "scoped",
+    "constraints": ["Stay within the reported behavior and preserve unrelated work", "Do not change public contracts without approval"],
+    "success": ["A focused regression distinguishes the failure from correct behavior", "The correction passes the regression and relevant neighboring checks", "Final review explains the cause, evidence, and remaining limitations"]
+  },
+  {
+    "type": "added",
+    "task": "isolate",
+    "title": "Isolate the failing behavior and controlling code path",
+    "acceptance": "Record a reproducible input, observed result, expected result, and the smallest discriminating check",
+    "dependsOn": []
+  },
+  {
+    "type": "added",
+    "task": "correct",
+    "title": "Correct the cause and preserve a focused regression",
+    "acceptance": "The regression fails against the original behavior and passes with the correction; record actual check results",
+    "dependsOn": ["isolate"]
+  },
+  {
+    "type": "added",
+    "task": "validate-impact",
+    "title": "Validate neighboring behavior and review the final change",
+    "acceptance": "Relevant neighboring checks pass and review confirms no unrelated changes or unintended contract changes",
+    "dependsOn": ["correct"]
+  }
+]

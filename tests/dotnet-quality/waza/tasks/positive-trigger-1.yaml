@@ -1,0 +1,16 @@
+id: dotnet-quality-positive-001
+name: Analyze dotnet format diagnostics
+description: Ask the custom agent to analyze and prioritize .NET formatting, style, and analyzer technical debt.
+tags:
+  - positive-trigger
+inputs:
+  prompt: "Analyze this .NET repository's dotnet format diagnostics and prioritize the technical debt by impact, confidence, affected files, and next steps. Do not modify files."
+expected:
+  should_trigger: true
+graders:
+  - type: trigger
+    name: triggers-dotnet-quality-agent
+    config:
+      skill_path: .github/agents/dotnet-quality.agent.md
+      mode: positive
+      threshold: 0.6

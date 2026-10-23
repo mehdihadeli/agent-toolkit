@@ -143,15 +143,15 @@ Run local evaluations from repository root. These targets load the root `.env`
 before starting Vally:
 
 ```bash
-VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml mise run vally-eval-claude-local
-VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml mise run vally-eval-copilot-local
+VALLY_EVAL_SPEC=tests/skill-guide/skills/skill-guide/vally/eval.yaml mise run vally-eval-claude-local
+VALLY_EVAL_SPEC=tests/skill-guide/skills/skill-guide/vally/eval.yaml mise run vally-eval-copilot-local
 ```
 
 CI evaluations use exported job variables and do not load `.env`:
 
 ```bash
-VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml mise run vally-eval-claude-ci
-VALLY_EVAL_SPEC=tests/skill-guide/vally/eval.yaml mise run vally-eval-copilot-ci
+VALLY_EVAL_SPEC=tests/skill-guide/skills/skill-guide/vally/eval.yaml mise run vally-eval-claude-ci
+VALLY_EVAL_SPEC=tests/skill-guide/skills/skill-guide/vally/eval.yaml mise run vally-eval-copilot-ci
 ```
 
 `vally-eval` and `vally-eval-copilot` remain aliases for the local Copilot

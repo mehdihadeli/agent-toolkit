@@ -42,6 +42,8 @@ plugins/
 	skill-guide/     skill for designing and validating agent skills
 .claude-plugin/    Claude marketplace metadata
 .agents/plugins/   Codex/agent marketplace metadata
+.cursor-plugin/   Cursor marketplace metadata
+.cursor/rules/    repository-local Cursor contributor guidance
 .github/agents/    host-native Markdown agents
 .vally.yaml        Vally skill/evaluation discovery and suite configuration
 tests/
@@ -96,11 +98,11 @@ plugins/
 │   └── skills/skill-guide/      skill authoring guidance
 ```
 
-Keep plugin source inside its plugin directory. Register each distributable plugin in both marketplace files, and keep its Claude and Codex manifests aligned on name and version. Do not add empty placeholder directories or duplicate source under host metadata.
+Keep plugin source inside its plugin directory. Register each distributable plugin in the Claude, Codex, and Cursor marketplace files, and keep their manifests aligned on name and version. Do not add empty placeholder directories or duplicate source under host metadata.
 
 Each `plugins/<id>/` directory is an independent source-of-truth and release boundary. Plugin-local `README.md` files document usage and validation. Root marketplace files register plugins for their host formats. The repository keeps a lightweight root `slnx` only for running the .NET plugin and test projects together.
 
-Do not hand-edit generated output or duplicate plugin source in host metadata. When adding or renaming a distributable plugin, update both marketplace files and its local documentation.
+Do not hand-edit generated output or duplicate plugin source in host metadata. When adding or renaming a distributable plugin, update all three marketplace files and its local documentation.
 
 ## Plugin boundaries
 
@@ -131,15 +133,118 @@ an application or runtime, and use an MCP when the primary contract is a set
 of callable tools. A plugin may combine surfaces when each has a clear owner;
 do not duplicate the same behavior across them.
 
+### Skill scripts and runtimes
+
+Skills may include production scripts when deterministic code is part of the
+capability. Keep those scripts under the owning skill's `scripts/` directory.
+Use `.mjs` as the default for short-lived skill tooling, Markdown/JSON/YAML
+generation, repository discovery, and plugin management. Use Python when a
+domain library is materially stronger, such as PPTX, OOXML, PDF, or image
+processing. Use C# for MCP servers, standalone agents, Microsoft Agent
+Framework workflows, Copilot SDK integrations, long-running services, or
+substantial shared .NET code. Do not add a runtime to an instruction-only skill.
+
+Repository-level native harness adapters are Python tooling under `tools/adapters/`,
+with pinned dependencies in `tools/requirements.txt`. `tools/generate.py` emits
+ignored `.opencode/`, `.copilot/`, and `.antigravity/` projections from canonical
+plugin-owned Markdown. Never hand-edit or commit those projections. Keep
+installer/adapter tests under `tests/harness-install/`. Run `make test-harness`,
+`make generate-all`, and `make garden` after changing adapters. Do not silently
+discard tool restrictions, translate Claude hooks, configure MCPs, or install
+into user settings as part of repository validation.
+
+Use a skill-local `package.json` only when the skill has independently runnable
+Node tooling or skill-specific dependencies. Keep shared evaluation tooling in
+the root `package.json`. Python skills should use `pyproject.toml` or an
+equivalent dependency boundary rather than hiding Python dependencies in npm.
+
+Keep tests and evaluations at repository root:
+
+```text
+tests/<plugin>/
+├── scripts/<skill-name>/     deterministic .mjs, Python, or C# script tests
+├── vally/                    real agent behavior and prompt contracts
+└── waza/                     trigger routing
+```
+
+Script tests verify executable behavior directly. Vally and Waza do not replace
+those tests.
+
 ## Plugin authoring workflow
 
 1. Define one focused purpose and create `plugins/<id>/`.
-2. Add only needed surfaces, plus `README.md`, matching Claude and Codex manifests, and host metadata.
+2. Add only needed surfaces, plus `README.md`, matching Claude, Codex, and Cursor manifests, and host metadata.
 3. Keep implementation, configuration, and supporting assets inside the plugin.
-4. Register the plugin in both marketplace files and keep name/version aligned.
+4. Register the plugin in all three marketplace files and keep name/version aligned.
 5. Add the corresponding tests under `tests/<id>/`.
 6. Update plugin documentation and relevant repository indexes.
 7. Run focused validation, then repository validation before publishing.
+
+## Create and validate skills with Waza
+
+Use Waza for skill-specific readiness and deterministic trigger coverage. Keep
+Vally as the repository-wide prompt and behavior evaluation system. Waza and
+Vally use different evaluation schemas, so keep their files in separate
+directories.
+
+### Add a skill
+
+Create the canonical skill under the owning plugin:
+
+```text
+plugins/<plugin-id>/skills/<skill-name>/SKILL.md
+```
+
+The `SKILL.md` frontmatter `name` must match `<skill-name>`, and `description`
+must state both the capability and concrete activation conditions. Keep the
+core instructions concise; place large references, examples, and scripts beside
+the skill.
+
+### Add Waza trigger coverage
+
+Create a Waza suite under the matching repository-level test directory:
+
+```text
+tests/<plugin-id>/waza/
+├── eval.yaml
+└── tasks/
+		├── positive-trigger-1.yaml
+		├── positive-trigger-2.yaml
+		└── negative-trigger-1.yaml
+```
+
+Use the mock executor for deterministic CI checks. Include at least two
+positive prompts and one negative prompt. Each task uses a `trigger` grader
+whose `skill_path` points to the canonical `SKILL.md`.
+
+Waza also supports custom `.agent.md` files. Use the same suite layout for a
+host-native agent and point `skill_path` at its canonical agent file. The
+dynamic runner supplies `.github/agents` as context for the dotnet-quality
+agent. MCP-only plugins remain covered by Vally MCP evaluations and executable
+tests.
+
+Run focused checks from the repository root:
+
+```bash
+mise run waza-eval
+waza check plugins/<plugin-id>/skills/<skill-name>
+waza quality plugins/<plugin-id>/skills/<skill-name>
+waza run tests/<plugin-id>/waza/eval.yaml --no-cache
+```
+
+`mise run waza-eval` dynamically discovers every
+`tests/**/waza/eval.yaml`. CI uses the same runner through
+`mise run waza-eval-ci`; the CI task only changes the execution mode and result
+directory.
+
+Use `waza suggest <skill-path> --dry-run` to draft additional tasks, then
+review generated prompts before adding them. Use `waza tokens profile` when a
+skill grows. Do not put credentials in Waza specs, tasks, fixtures, or CI.
+
+The repository workflow at `.github/workflows/waza-eval.yml` installs a pinned
+Waza binary, runs the dynamic mise task, and uploads results. Adding a new Waza
+suite under `tests/<plugin-id>/waza/` automatically includes it in local and CI
+runs.
 
 ## Test structure
 
@@ -261,6 +366,7 @@ tests/
 ```
 
 - Every plugin owns its tests under `tests/<plugin>/`. Keep `docs-research` and `skill-guide` Vally-only unless executable test projects become necessary; add `vally/`, `unit-tests/`, and `integration-tests/` only when those test types apply.
+- When a skill or plugin contains production scripts, put deterministic script tests under `tests/<plugin>/scripts/<skill-name>/`. Use `.test.mjs`, Python tests, or a focused .NET test project according to the script runtime.
 - Skills use Vally evaluations, not .NET test projects. Add one `eval.yaml` per plugin evaluation suite under `tests/<plugin>/vally/`; keep supporting fixtures beside that file when needed.
 - .NET agents and MCPs use xUnit v3. Keep fast unit tests under `tests/<plugin>/unit-tests/` and tests requiring real hosting, networking, or external boundaries under `tests/<plugin>/integration-tests/`.
 - .NET test projects target `net10.0`, enable Microsoft Testing Platform, and use the repository `global.json` setting `test.runner` to `Microsoft.Testing.Platform` so `dotnet test` uses MTP with the .NET 10 SDK.

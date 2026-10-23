@@ -1,0 +1,16 @@
+id: skill-guide-negative-001
+name: Implement application code
+description: Do not use skill-guide for ordinary implementation work unrelated to authoring or validating skills.
+tags:
+  - negative-trigger
+inputs:
+  prompt: "Fix the null handling in this C# method and add a unit test. This request is unrelated to designing or validating an agent skill."
+expected:
+  should_trigger: false
+graders:
+  - type: trigger
+    name: does-not-trigger-skill-guide
+    config:
+      skill_path: plugins/skill-guide/skills/skill-guide/SKILL.md
+      mode: negative
+      threshold: 0.9

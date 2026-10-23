@@ -1,0 +1,10 @@
+{
+  "name": "agent-toolkit-skill-guide",
+  "version": "0.1.0",
+  "description": "Create, organize, and maintain agent skills.",
+  "author": { "name": "Agent Toolkit" },
+  "license": "MIT",
+  "skills": "./skills/",
+  "agents": [],
+  "hooks": { "hooks": {} }
+}

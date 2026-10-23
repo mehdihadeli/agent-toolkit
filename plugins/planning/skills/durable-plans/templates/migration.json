@@ -1,0 +1,42 @@
+[
+  {
+    "type": "scoped",
+    "constraints": ["Do not change production state or delete data without explicit approval", "Preserve compatibility during the approved transition", "Use a disposable environment for migration rehearsals"],
+    "success": ["The target behavior passes agreed compatibility checks", "A representative rehearsal demonstrates the transition and recovery path", "The delivery review records remaining risks and required approvals"]
+  },
+  {
+    "type": "added",
+    "task": "baseline",
+    "title": "Capture current contracts, consumers, and migration risks",
+    "acceptance": "Record the current baseline, affected consumers, representative fixtures, and concrete compatibility checks",
+    "dependsOn": []
+  },
+  {
+    "type": "added",
+    "task": "recovery-design",
+    "title": "Define transition and recovery checkpoints",
+    "acceptance": "Record the rehearsal environment, recovery procedure, irreversible boundaries, and approval requirements",
+    "dependsOn": ["baseline"]
+  },
+  {
+    "type": "added",
+    "task": "transition",
+    "title": "Implement the approved compatibility-preserving transition",
+    "acceptance": "Focused old/new compatibility checks pass and no unapproved production action is performed",
+    "dependsOn": ["recovery-design"]
+  },
+  {
+    "type": "added",
+    "task": "rehearsal",
+    "title": "Rehearse transition and recovery with representative fixtures",
+    "acceptance": "Record actual transition and recovery outcomes in a disposable environment and resolve material failures",
+    "dependsOn": ["transition"]
+  },
+  {
+    "type": "added",
+    "task": "readiness-review",
+    "title": "Review delivery readiness without authorizing production execution",
+    "acceptance": "Compatibility and rehearsal evidence satisfy criteria; deployment approvals and residual risks are explicit",
+    "dependsOn": ["rehearsal"]
+  }
+]

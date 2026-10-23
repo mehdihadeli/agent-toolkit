@@ -1,0 +1,16 @@
+id: docs-research-positive-001
+name: Research current SDK documentation
+description: Request current official documentation for a library or SDK before implementation.
+tags:
+  - positive-trigger
+inputs:
+  prompt: "Check the current official documentation for this SDK and turn the relevant findings into an implementation checklist."
+expected:
+  should_trigger: true
+graders:
+  - type: trigger
+    name: triggers-docs-research
+    config:
+      skill_path: plugins/docs-research/skills/docs-research/SKILL.md
+      mode: positive
+      threshold: 0.6

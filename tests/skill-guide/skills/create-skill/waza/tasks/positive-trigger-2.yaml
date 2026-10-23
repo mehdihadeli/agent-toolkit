@@ -1,0 +1,16 @@
+id: create-skill-positive-002
+name: Add skill scaffolding
+description: Use create-skill when adding a skill with generated files.
+tags:
+  - positive-trigger
+inputs:
+  prompt: "Help me bootstrap an agent skill in the skill-guide plugin and generate its initial SKILL.md without overwriting existing files."
+expected:
+  should_trigger: true
+graders:
+  - type: trigger
+    name: triggers-create-skill-for-bootstrap
+    config:
+      skill_path: plugins/skill-guide/skills/create-skill/SKILL.md
+      mode: positive
+      threshold: 0.6

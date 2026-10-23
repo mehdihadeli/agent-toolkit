@@ -2,9 +2,27 @@
 
 Plugin-first building blocks for coding-agent workflows: .NET MCP servers, .NET agents, Markdown agents, reusable skills, and host commands.
 
-Each capability lives inside its owning plugin. Claude Code and Codex discover plugins through the committed marketplace registries; tests and prompt evaluations remain at repository root.
+Each capability lives inside its owning plugin. Claude Code, Codex, and Cursor discover plugins through committed marketplace registries; tests and prompt evaluations remain at repository root.
 
 ## Quick Start
+
+Install through your native plugin marketplace, or use Python 3.11+ from a clone
+for hosts without a repository marketplace route:
+
+```bash
+python tools/harness_install.py list
+make install-opencode DRY_RUN=1
+make install-opencode
+make install-copilot PLUGIN=planning
+```
+
+The Python installer copies complete skills and supporting assets, not hooks,
+agent profiles, or executable services. Make is optional; the Python CLI exposes
+the same operations. See [host installation](docs/harnesses.md) for native
+marketplace setup, project scope, updates, and safe uninstall.
+
+Preview the documentation website with `npm ci` and `npm run docs:dev`.
+See [Documentation Website](docs/website.md) for static builds and GitHub Pages deployment.
 
 Install repository dependencies and run static validation:
 
@@ -13,6 +31,7 @@ mise install
 npm ci
 mise run validate
 mise run vally-lint
+mise run waza-eval
 ```
 
 Run all .NET tests:
@@ -56,26 +75,70 @@ These surfaces are managed by plugins. Do not add parallel repository-level agen
 | [Dotnet Quality](plugins/dotnet-quality/README.md) | .NET agent | Read-only `dotnet format` quality analysis                            |
 | [Docs Research](plugins/docs-research/README.md)   | Skill      | Research official documentation and produce implementation checklists |
 | [Skill Guide](plugins/skill-guide/README.md)       | Skill      | Design, organize, author, and validate reusable skills                |
+| [Planning](plugins/planning/README.md)             | Skill + Node.js | Durable task journals, verified progress, and recovery across sessions |
 
 Plugin registrations are maintained in:
 
 - [Claude marketplace](.claude-plugin/marketplace.json)
 - [Codex marketplace](.agents/plugins/marketplace.json)
+- [Cursor marketplace](.cursor-plugin/marketplace.json)
 
-Each plugin is an independent release boundary with its own manifests and README. Plugin IDs and versions must remain aligned across both marketplace registries.
+Each plugin is an independent release boundary with its own manifests and README. Plugin IDs and versions must remain aligned across all three marketplace registries.
+
+## Multi-Harness Support
+
+One canonical `plugins/` tree serves native marketplaces and local installation.
+Each host receives only the surfaces it supports; installing a plugin never
+starts a .NET application or MCP server automatically.
+
+| Harness | Registry or installed artifacts | Notes |
+| --- | --- | --- |
+| **Claude Code** | `.claude-plugin/marketplace.json` + `plugins/*/.claude-plugin/plugin.json` | Native plugin source; optional planning hooks remain Claude-specific. |
+| **Codex CLI** | `.agents/plugins/marketplace.json` + `plugins/*/.codex-plugin/plugin.json` | Native marketplace points to canonical plugins and skills. |
+| **Cursor** | `.cursor-plugin/marketplace.json` + `plugins/*/.cursor-plugin/plugin.json` | Thin manifests reference canonical skills; no translated source copies. |
+| **OpenCode** | `.opencode/{skills,agents,commands}/` (generated, ignored) | Native names and closed `permission` blocks; install under `~/.config/opencode/`. |
+| **Antigravity CLI** | `.antigravity/plugins/<id>/{plugin.json,skills,agents}` (generated, ignored) | Self-contained plugins; commands become manual skills; models inherit or use explicit `flash`/`pro` overrides. |
+| **GitHub Copilot** | `.copilot/{skills,agents}/` (generated, ignored) | Native `.agent.md` profiles, commands-as-skills; install under `~/.copilot/`. |
+
+```bash
+make deps                               # install pinned Python adapter dependency
+make generate-all                       # generate all three adapter projections
+make validate                           # validate native marketplace metadata
+make garden                             # metadata, links, output integrity, source drift
+make install-native-opencode DRY_RUN=1   # preview without changing host settings
+make install-native-opencode PLUGIN=planning
+make doctor-native HARNESS=opencode
+make uninstall-native-opencode PLUGIN=planning
+make test-harness                       # deterministic adapters and installer tests
+```
+
+Claude, Codex, and Cursor use committed registries rather than generated trees.
+The generator emits only existing plugin-owned Markdown surfaces; the current
+plugins primarily provide skills. It does not turn .NET applications into
+Markdown agents or copy the workspace-specific Copilot agent into other hosts.
+
+The dependency-free `make install-opencode`, `make install-copilot`, and other
+skills-only targets remain available, including Gemini CLI and Pi. Do not use
+both installation routes in the same scope: generated skill IDs are namespaced
+and can otherwise duplicate an existing bare-name skill. User scope and copy
+mode are defaults. Existing unrelated files and edited installs are refused.
+
+See [Host Harnesses](docs/harnesses.md) for setup, supported surfaces, and limits.
 
 ## Supported Hosts And Tools
 
 This repository supports a small set of hosts and development tools. The
 plugin source remains shared, but each host consumes only the integration it
-supports; this repository does not generate Cursor, OpenCode, or Antigravity
-artifacts.
+supports. The skills-only installer copies canonical skill directories without
+generating translated agents or host-specific plugin trees.
 
 | Host or tool          | Integration                                                     | What it supports                                                                     |
 | --------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | Claude Code           | `.claude-plugin/marketplace.json` and per-plugin `plugin.json`  | Plugin discovery, Markdown skills, Markdown agents, commands, and MCP connections    |
 | OpenAI Codex CLI      | `.agents/plugins/marketplace.json` and per-plugin `plugin.json` | Plugin discovery and Markdown skills or other Codex-supported plugin surfaces        |
 | GitHub Copilot        | Workspace instructions, Copilot CLI, and Copilot SDK            | Markdown guidance, Copilot-backed evaluations, and the standalone .NET quality agent |
+| Cursor                | `.cursor-plugin/marketplace.json` and per-plugin `plugin.json` | Native plugin discovery of canonical skills |
+| OpenCode, Antigravity CLI, Gemini CLI, Pi | Python skills installer | Canonical Markdown skills and their scripts, references, and assets |
 | MCP clients           | stdio or Streamable HTTP                                        | Connections to the .NET Search MCP and other MCP projects hosted by the user         |
 | Vally                 | Repository-local CLI and evaluation specs                       | Static plugin validation, skill activation, agent behavior, and MCP evaluations      |
 | Claude Vally executor | `tools/vally-executor-claude`                                   | Runs the same Vally evaluations through Claude Code                                  |
@@ -195,6 +258,12 @@ dotnet test --solution agent-toolkit.slnx
 ```
 
 Prompt evaluations require provider credentials. See [tests/README.md](tests/README.md) and [docs/plugin-eval.md](docs/plugin-eval.md) for executor, BYOK, and Claude configuration.
+
+Waza provides fast, credential-free trigger coverage for every skill and host-native
+agent. Run all suites with `mise run waza-eval`, or focus on one surface with
+`WAZA_SKILL=skill-guide mise run waza-eval`. Each covered surface requires two
+positive trigger tasks and one negative trigger task; repository validation checks
+that coverage before CI runs Waza.
 
 ## Adding A Plugin
 

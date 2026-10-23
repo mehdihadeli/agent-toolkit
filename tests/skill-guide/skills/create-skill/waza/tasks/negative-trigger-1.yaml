@@ -1,0 +1,16 @@
+id: create-skill-negative-001
+name: Edit existing instructions
+description: Do not use create-skill for changing one existing skill.
+tags:
+  - negative-trigger
+inputs:
+  prompt: "Rewrite the workflow section of the existing docs-research skill without creating any new files."
+expected:
+  should_trigger: false
+graders:
+  - type: trigger
+    name: does-not-trigger-create-skill-for-editing
+    config:
+      skill_path: plugins/skill-guide/skills/create-skill/SKILL.md
+      mode: negative
+      threshold: 0.9

@@ -1,0 +1,15 @@
+id: durable-plans-positive-001
+name: Persist long-running migration state
+description: Track multi-session implementation with durable progress and evidence.
+tags: [positive-trigger]
+inputs:
+  prompt: "Track this long-running migration in durable plan files with dependencies, verification evidence, blockers, and a next action for handoff."
+expected:
+  should_trigger: true
+graders:
+  - type: trigger
+    name: triggers-durable-tracking
+    config:
+      skill_path: plugins/planning/skills/durable-plans/SKILL.md
+      mode: positive
+      threshold: 0.6

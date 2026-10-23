@@ -32,8 +32,19 @@ Set `QUALITY_AGENT_WORKING_DIRECTORY` to the workspace to inspect. The agent is 
 ## Validate the repository
 
 ```bash
+mise run validate
+mise run waza-eval
 dotnet test --solution agent-toolkit.slnx
 vally lint .
 ```
 
-Use unit tests for deterministic logic, integration tests for hosted boundaries, and Vally evaluations for skill activation and prompt behavior. See [authoring.md](authoring.md) before adding a plugin or host surface.
+Run one Waza suite during skill development:
+
+```bash
+WAZA_SKILL=skill-guide mise run waza-eval
+```
+
+Use Waza for fast mock-based trigger routing, Vally evaluations for real agent
+behavior and prompt contracts, unit tests for deterministic logic, and integration
+tests for hosted boundaries. See [authoring.md](authoring.md) before adding a
+plugin or host surface.

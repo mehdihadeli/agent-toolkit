@@ -1,33 +1,36 @@
 # Continuous Integration
 
-GitHub Actions uses two workflows. Both run on `ubuntu-latest`, use read-only
-repository permissions, and cancel older runs for the same branch or pull
-request when a newer run starts.
+GitHub Actions separates build/release, evaluation, harness, documentation,
+trigger evaluation, and labeling workflows. Build/release permissions are
+read-only except for the release job. See [Versioning](versioning.md) for the
+NBGV version contract and Release Drafter behavior.
 
 ## Workflow map
 
 | Workflow          | File                                 | Purpose                                                                                   |
 | ----------------- | ------------------------------------ | ----------------------------------------------------------------------------------------- |
-| .NET plugin tests | `.github/workflows/dotnet-tests.yml` | Build and run all .NET unit and integration tests.                                        |
+| Build-Test-Publish | `.github/workflows/build-and-publish.yml` | Test .NET plugins, calculate NBGV versions, and update GitHub releases. |
 | Evaluation        | `.github/workflows/evaluation.yml`   | Validate repository metadata, lint Vally specs, and run prompt-driven plugin evaluations. |
 
-## .NET plugin tests
+## Build and release workflow
 
-The `.NET plugin tests` workflow runs for pull requests and pushes to `main`
-that change plugin agents or MCPs, unit or integration tests, the solution, the
-SDK selection, or the workflow itself. It can also be started manually with
-`workflow_dispatch`.
+The `Build-Test-Publish` workflow runs for pull requests, pushes to `main`, and
+`v*` tags. It can also be started manually with `workflow_dispatch`.
 
-Its single job:
+Its build/test job:
 
 1. Checks out the repository.
 2. Installs the SDK selected by `global.json`.
-3. Runs `dotnet test --solution agent-toolkit.slnx`.
+3. Runs `dotnet test --solution agent-toolkit.slnx --configuration Release`.
 
-This workflow covers executable .NET plugins. Live Tavily SDK tests are not
-part of normal pull-request runs because they consume API credits. Start this
-workflow manually and set `Run live Tavily SDK integration tests` when those
-tests are needed; the job requires the `TAVILY_API_KEY` secret.
+After tests pass, `main` and tag runs calculate versions using the pinned NBGV
+tool and full Git history. Eligible previews and RCs update draft prereleases;
+stable tags publish releases. Bootstrap preview height zero is validation-only.
+The workflow publishes release notes, not NuGet packages or binaries.
+
+This workflow covers executable .NET plugins. Live Tavily SDK tests remain
+disabled because they consume API credits. Run them locally with
+`TAVILY_RUN_LIVE_TESTS=1` and `TAVILY_API_KEY` when needed.
 
 ## Evaluation workflow
 
@@ -164,6 +167,5 @@ its provider credentials. See [plugin-eval.md](plugin-eval.md) for focused
 evaluations.
 
 Live Tavily SDK tests require both `TAVILY_RUN_LIVE_TESTS=1` and
-`TAVILY_API_KEY`; the manual workflow input configures the environment for
-them. Normal .NET runs leave the flag unset, so live tests are reported as
+`TAVILY_API_KEY`. Normal .NET runs leave the flag unset, so live tests are reported as
 skipped rather than making network calls.

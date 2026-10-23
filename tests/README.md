@@ -8,6 +8,15 @@ Each plugin owns its tests under `tests/<plugin>/`:
 
 Skill-only plugins such as `docs-research` and `skill-guide` use `vally/` without .NET test projects. .NET plugins such as `search` and `dotnet-quality` use xUnit v3 projects under `unit-tests/` and `integration-tests/`.
 
+The [Planning plugin](../plugins/planning/README.md) adds deterministic Node.js
+runtime, hook, example, template, and grader tests under `planning/scripts/durable-plans/`, eight state-based
+Vally scenarios under `planning/vally/`, and Waza routing checks under
+`planning/waza/`. Run its deterministic tests with:
+
+```bash
+node --test tests/planning/scripts/durable-plans/*.test.mjs
+```
+
 Run all .NET plugin and test projects together from repository root:
 
 ```bash
@@ -160,7 +169,8 @@ VALLY_EVAL_SPEC=tests/dotnet-quality/vally/quality/eval.yaml \
 
 The same executor pair applies to every Vally category:
 
-- Skills: `tests/docs-research/vally/eval.yaml` and `tests/skill-guide/vally/eval.yaml`.
+- Skills: `tests/docs-research/vally/eval.yaml` and
+  `tests/skill-guide/skills/skill-guide/vally/eval.yaml`.
 - Agent: `tests/dotnet-quality/vally/agent/eval.yaml` and `tests/dotnet-quality/vally/quality/eval.yaml`.
 - MCP: `tests/search/vally/mcp/eval.yaml`.
 
