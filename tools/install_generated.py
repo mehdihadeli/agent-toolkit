@@ -67,7 +67,15 @@ def unchanged(destination, entry):
     if not present(destination):
         return False
     if entry["mode"] == "link":
-        return linked(destination) and destination.resolve() == Path(entry["source"]).resolve()
+        if not linked(destination):
+            return False
+        try:
+            target = os.readlink(destination)
+        except OSError:
+            return False
+        if not os.path.isabs(target):
+            target = os.path.join(destination.parent, target)
+        return os.path.normcase(os.path.abspath(target)) == os.path.normcase(os.path.abspath(entry["source"]))
     return not linked(destination) and fingerprint(destination) == entry["hash"]
 
 
