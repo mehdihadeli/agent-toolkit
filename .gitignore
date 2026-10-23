@@ -525,3 +525,4 @@ http-client.private.env.json
 .work/***
 session-state/**
 .planning
+.work

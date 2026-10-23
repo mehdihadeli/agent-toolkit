@@ -6,8 +6,33 @@ Marketplace registrations are in:
 
 - `.claude-plugin/marketplace.json` for Claude Code.
 - `.agents/plugins/marketplace.json` for Codex.
+- `.cursor-plugin/marketplace.json` for Cursor.
 
 Each entry points to a source directory under `plugins/`.
+
+## Install and use a skill
+
+Install one skill without cloning the repository or installing its plugin:
+
+```bash
+gh skill install mehdihadeli/agent-toolkit durable-plans
+npx skills add mehdihadeli/agent-toolkit --skill durable-plans
+```
+
+Choose one command and select your coding tool when prompted. GitHub CLI 2.90+
+is required for `gh skill`; `npx skills` requires Node.js and npm. See
+[skills-only installers](harnesses.md#skills-only-installers) for agent selection,
+scope, pinning, and the difference from clone-based installation.
+
+After installation, give your coding tool a concrete task:
+
+```text
+Use durable-plans to track this migration, record verification evidence, and leave a clear next action for the next session.
+```
+
+The host discovers and activates installed skills according to its own rules.
+Reading the catalog does not install a skill, and installing a skill does not
+start an MCP server, .NET agent, or plugin-level hook.
 
 ## Run the search MCP
 

@@ -26,7 +26,13 @@ remain opt-in and Claude-specific; read its README before enabling them.
 
 ### Codex CLI
 
-Add this repository in Codex's plugin manager and select a registered plugin.
+Run in a terminal with a current Codex CLI:
+
+```bash
+codex plugin marketplace add mehdihadeli/agent-toolkit
+codex plugin add agent-toolkit-planning@agent-toolkit
+```
+
 The committed `.agents/plugins/marketplace.json` resolves each source relative
 to its registry directory. Per-plugin Codex metadata references canonical
 skills. No generated Codex skill or agent tree is required by this route.
@@ -177,9 +183,62 @@ manually clearing a stale lock after an interrupted process.
 fixtures, real skill assets, and filesystem behavior on Windows/Linux. It does
 not claim authenticated end-to-end execution inside every host.
 
+## Skills-only installers
+
+Install an individual skill directly from GitHub with GitHub CLI 2.90+ or
+[Vercel's skills CLI](https://github.com/vercel-labs/skills). The latter requires
+Node.js and npm. Neither route requires a local clone, marketplace registration,
+or adapter generation. Choose one installer, not both for the same skill.
+
+```bash
+gh skill install mehdihadeli/agent-toolkit durable-plans
+npx skills add mehdihadeli/agent-toolkit --skill durable-plans
+```
+
+Select your coding tool when prompted, or specify an agent and scope explicitly:
+
+```bash
+gh skill install mehdihadeli/agent-toolkit durable-plans --agent claude-code --scope user
+npx skills add mehdihadeli/agent-toolkit --skill durable-plans --agent claude-code --global
+```
+
+Both installers default to project scope. `--scope user` (`gh`) and `--global`
+(`npx skills`) install across projects. Agent identifiers and supported targets
+belong to each installer; they are not the Python installer's host selectors.
+
+List skills without installing, or pin a GitHub CLI install to a reviewed ref:
+
+```bash
+npx skills add mehdihadeli/agent-toolkit --list
+gh skill install mehdihadeli/agent-toolkit durable-plans --pin <tag-or-commit-sha>
+```
+
+Use the bare skill name, not the plugin ID. Current source skills are:
+
+| Skill | Plugin |
+| --- | --- |
+| `docs-research` | [Docs Research](../plugins/docs-research/README.md) |
+| `skill-guide` | [Skill Guide](../plugins/skill-guide/README.md) |
+| `create-skill` | [Skill Guide](../plugins/skill-guide/README.md) |
+| `durable-plans` | [Planning](../plugins/planning/README.md) |
+
+Skills include their local scripts, references, and assets, but not plugin-level
+agents, commands, hooks, MCP configuration, or .NET applications. Any runtime or
+external-tool prerequisites documented by the skill still apply. Review skill
+instructions and scripts before use.
+
+Prefer the GitHub source over a generated local tree to avoid discovering
+adapter copies. These third-party installs do not use this repository's ownership
+ledger; manage updates and removal with the installer you chose. Do not mix
+them with Python or generated installs of the same skill in overlapping scopes.
+See the [GitHub CLI manual](https://cli.github.com/manual/gh_skill_install) and
+[skills CLI documentation](https://github.com/vercel-labs/skills#readme) for
+current options and supported agents.
+
 ## Skills-Only Installation
 
-For bare-name canonical skills without adapter generation or dependencies:
+For owned installs from a local clone, use Python 3.11+ without adapter generation
+or third-party Python dependencies:
 
 ```bash
 python tools/harness_install.py list

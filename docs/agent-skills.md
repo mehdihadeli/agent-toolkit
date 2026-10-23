@@ -6,6 +6,26 @@ Agent skills are reusable Markdown instructions stored inside a plugin:
 plugins/<plugin>/skills/<skill-name>/SKILL.md
 ```
 
+## Available skills
+
+| Skill | Purpose |
+| --- | --- |
+| [docs-research](../plugins/docs-research/skills/docs-research/SKILL.md) | Research official documentation and produce implementation checklists |
+| [skill-guide](../plugins/skill-guide/skills/skill-guide/SKILL.md) | Design, organize, and validate reusable skills |
+| [create-skill](../plugins/skill-guide/skills/create-skill/SKILL.md) | Author a new reusable skill |
+| [durable-plans](../plugins/planning/skills/durable-plans/SKILL.md) | Maintain task journals, verification evidence, and session recovery |
+
+Install an individual skill without its plugin's agents, commands, or hooks:
+
+```bash
+gh skill install mehdihadeli/agent-toolkit durable-plans
+npx skills add mehdihadeli/agent-toolkit --skill durable-plans
+```
+
+Choose one installer. `gh skill` requires GitHub CLI 2.90+; `npx skills` requires
+Node.js and npm. See [skills-only installers](harnesses.md#skills-only-installers)
+for agent selection, install scopes, version pinning, and installation boundaries.
+
 ## Required structure
 
 `SKILL.md` starts with YAML frontmatter containing:
