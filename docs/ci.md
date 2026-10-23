@@ -29,11 +29,13 @@ stable tags publish releases. Bootstrap preview height zero is validation-only.
 The workflow publishes release notes, not NuGet packages or binaries.
 
 This workflow covers executable .NET plugins. Live Tavily SDK tests are off by
-default because they consume API credits. To enable them, configure the
-`TAVILY_API_KEY` repository secret, then manually run `Build-Test-Publish` with
-the `run_live_tests` checkbox selected. The test step fails if the secret is
-missing rather than silently skipping the requested live tests. Pull requests
-and automatic pushes never enable these tests or receive the Tavily secret.
+default because they consume API credits. Set the GitHub Actions repository
+variable `ENABLED_LIVE_TESTS` to `true` to enable live tests across CI workflows,
+including automatic pushes and same-repository pull requests. Configure the
+`TAVILY_API_KEY` repository secret before enabling this setting. The test step
+fails if the secret is missing rather than silently skipping requested tests.
+Fork pull requests always keep live tests disabled because secrets are unavailable.
+For a single manual run, select the `run_live_tests` checkbox instead.
 For local runs, set `TAVILY_RUN_LIVE_TESTS=1` and `TAVILY_API_KEY`.
 
 ## Evaluation workflow
@@ -55,7 +57,18 @@ The `Vally lint` job:
 
 ### Evaluation job
 
-The `Run Vally evaluation suite` job starts after lint succeeds:
+The `Run Vally evaluation suite` job starts after lint succeeds when repository
+variable `ENABLED_LIVE_TESTS` is `true` or a manual `Evaluation` run selects
+`run_live_tests`. The shared repository variable enables live mode in both
+`Evaluation` and `Build-Test-Publish`; manual inputs apply only to their own
+workflow. Unset or false means live mode is off unless manually opted in.
+
+With the repository variable enabled, eligible pushes, same-repository pull
+requests, scheduled runs, and manual runs execute Copilot and Claude Code.
+Fork pull requests always run lint only. When live mode is off, the evaluation
+job is skipped, including its provider credentials and executor setup.
+
+When live evaluation is enabled, the job:
 
 1. Installs the repository-pinned Vally CLI and GitHub Copilot CLI with
    `npm ci`, then invokes `mise run vally-eval` so it uses the same command as
@@ -79,7 +92,7 @@ the Search MCP for each evaluation through its stdio environment.
 
 ## Credentials and settings
 
-Required for the current Copilot evaluation specs:
+Required when live mode is enabled for the current Copilot evaluation specs:
 
 - `OPENAI_API_KEY` secret for the BYOK provider configured in the eval specs.
 - Each BYOK eval declares its own provider `baseUrl` and `model`. The runner
@@ -97,7 +110,8 @@ to read the provider secret from the Vally process environment. The provider
 `OPENAI_BASE_URL` and `OPENAI_MODEL` are documented local settings but are not
 automatically interpolated by Vally. See the [Vally BYOK reference](https://microsoft.github.io/vally/reference/eval-spec/#executor-config--byok).
 
-Claude evaluation is mandatory in the evaluation job:
+When live mode is enabled, the evaluation job runs both Copilot and Claude
+Code. Claude requires:
 
 - `ANTHROPIC_API_KEY` secret.
 - `ANTHROPIC_BASE_URL` repository variable for the Anthropic-compatible
