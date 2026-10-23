@@ -28,9 +28,13 @@ tool and full Git history. Eligible previews and RCs update draft prereleases;
 stable tags publish releases. Bootstrap preview height zero is validation-only.
 The workflow publishes release notes, not NuGet packages or binaries.
 
-This workflow covers executable .NET plugins. Live Tavily SDK tests remain
-disabled because they consume API credits. Run them locally with
-`TAVILY_RUN_LIVE_TESTS=1` and `TAVILY_API_KEY` when needed.
+This workflow covers executable .NET plugins. Live Tavily SDK tests are off by
+default because they consume API credits. To enable them, configure the
+`TAVILY_API_KEY` repository secret, then manually run `Build-Test-Publish` with
+the `run_live_tests` checkbox selected. The test step fails if the secret is
+missing rather than silently skipping the requested live tests. Pull requests
+and automatic pushes never enable these tests or receive the Tavily secret.
+For local runs, set `TAVILY_RUN_LIVE_TESTS=1` and `TAVILY_API_KEY`.
 
 ## Evaluation workflow
 
@@ -167,5 +171,5 @@ its provider credentials. See [plugin-eval.md](plugin-eval.md) for focused
 evaluations.
 
 Live Tavily SDK tests require both `TAVILY_RUN_LIVE_TESTS=1` and
-`TAVILY_API_KEY`. Normal .NET runs leave the flag unset, so live tests are reported as
+`TAVILY_API_KEY`. Normal CI runs set the flag to `0`, so live tests are reported as
 skipped rather than making network calls.

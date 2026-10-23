@@ -105,6 +105,20 @@ class NativeInstallerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "user-scoped"):
             installer.config_root("antigravity", scope="project")
 
+    def test_link_ownership_normalizes_broken_targets_without_symlink_privileges(self):
+        source = self.output / "agents/review.md"
+        target = str(source.absolute())
+        if sys.platform == "win32":
+            target = "\\\\?\\" + target
+        entry = {"mode": "link", "source": str(source)}
+        destination = self.target / "agents/review.md"
+        with patch.object(installer, "present", return_value=True), \
+                patch.object(installer, "linked", return_value=True), \
+                patch.object(installer.os, "readlink", return_value=target):
+            self.assertTrue(installer.unchanged(destination, entry))
+            entry["source"] = str(self.output / "agents/other.md")
+            self.assertFalse(installer.unchanged(destination, entry))
+
     def test_broken_owned_links_are_missing_and_can_be_uninstalled(self):
         self.generate()
         try:

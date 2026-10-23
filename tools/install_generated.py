@@ -63,6 +63,13 @@ def read_ledger(root):
     return ledger
 
 
+def normalized_link_target(path):
+    target = os.path.normcase(os.path.realpath(path))
+    if os.name == "nt":
+        target = "\\\\" + target[8:] if target.startswith("\\\\?\\unc\\") else target.removeprefix("\\\\?\\")
+    return target
+
+
 def unchanged(destination, entry):
     if not present(destination):
         return False
@@ -75,7 +82,7 @@ def unchanged(destination, entry):
             return False
         if not os.path.isabs(target):
             target = os.path.join(destination.parent, target)
-        return os.path.normcase(os.path.abspath(target)) == os.path.normcase(os.path.abspath(entry["source"]))
+        return normalized_link_target(target) == normalized_link_target(entry["source"])
     return not linked(destination) and fingerprint(destination) == entry["hash"]
 
 

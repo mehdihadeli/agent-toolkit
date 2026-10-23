@@ -8,6 +8,12 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      run_live_tests:
+        description: Run live Tavily SDK integration tests (consumes API credits)
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -47,7 +53,16 @@ jobs:
         run: bash -n scripts/calculate-version.sh scripts/release-version.sh
 
       - name: Test
-        run: dotnet test --solution agent-toolkit.slnx --configuration Release
+        shell: bash
+        env:
+          TAVILY_RUN_LIVE_TESTS: ${{ github.event_name == 'workflow_dispatch' && inputs.run_live_tests && '1' || '0' }}
+          TAVILY_API_KEY: ${{ github.event_name == 'workflow_dispatch' && inputs.run_live_tests && secrets.TAVILY_API_KEY || '' }}
+        run: |
+          if [[ "$TAVILY_RUN_LIVE_TESTS" == "1" && -z "$TAVILY_API_KEY" ]]; then
+            echo "::error::Set the TAVILY_API_KEY repository secret before enabling live tests."
+            exit 1
+          fi
+          dotnet test --solution agent-toolkit.slnx --configuration Release
 
   calculate-version:
     name: Calculate release version
