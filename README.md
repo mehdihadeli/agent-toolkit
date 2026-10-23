@@ -1,30 +1,190 @@
 # Agent Toolkit
 
-Plugin-first building blocks for coding-agent workflows: .NET MCP servers, .NET agents, Markdown agents, reusable skills, and host commands.
+Agent Toolkit gives coding agents reusable skills and tools for web research,
+documentation lookup, read-only .NET quality analysis, skill authoring, and
+planning across sessions.
 
-Each capability lives inside its owning plugin. Claude Code, Codex, and Cursor discover plugins through committed marketplace registries; tests and prompt evaluations remain at repository root.
+Each capability lives in a focused plugin, combining Markdown guidance with
+scripts, standalone agents, or MCP servers where needed. Install individual
+skills or choose a plugin for your coding tool. Shared source keeps the content
+consistent across hosts, while each integration respects the host's capabilities.
 
-## Quick Start
+## Multi-harness support
 
-Install through your native plugin marketplace, or use Python 3.11+ from a clone
-for hosts without a repository marketplace route:
+Choose an installation route for your coding tool. Available components depend
+on the route and the host's capabilities.
 
-```bash
-python tools/harness_install.py list
-make install-opencode DRY_RUN=1
-make install-opencode
-make install-copilot PLUGIN=planning
+| Host | Installation route | Available components |
+| --- | --- | --- |
+| Claude Code | Native plugin marketplace | Canonical plugins and skills; optional Claude-specific planning hooks |
+| OpenAI Codex CLI | Native plugin marketplace | Canonical plugins and skills |
+| Cursor | Native plugin marketplace | Canonical plugins and skills |
+| OpenCode | `make install-native-opencode` | Generated skills, portable agents, and commands with translated tool permissions |
+| Antigravity CLI | `make install-native-antigravity` | Generated plugins containing skills and portable agents; commands become manual skills |
+| GitHub Copilot | `make install-native-copilot` | Generated agent profiles and skills; commands become manually invoked skills |
+| Gemini CLI | `make install-gemini-cli` | Canonical skills and supporting assets |
+| Pi | `make install-pi` | Canonical skills and supporting assets |
+
+The dependency-free skills-only installer also supports OpenCode, Antigravity,
+and Copilot. Do not mix installation routes in the same scope: generated skill
+names can duplicate bare-name skills.
+
+See [Host Harnesses](docs/harnesses.md) for the capability matrix, configuration
+paths, model mappings, tool permissions, and installation limits.
+
+## Quick start
+
+Choose a plugin for your task:
+
+| Plugin | Purpose |
+| --- | --- |
+| [Search](plugins/search/README.md) | Bounded public web retrieval and cited research through a .NET MCP |
+| [Dotnet Quality](plugins/dotnet-quality/README.md) | Read-only `dotnet format` analysis through a standalone .NET agent |
+| [Docs Research](plugins/docs-research/README.md) | Official documentation research and implementation checklists |
+| [Skill Guide](plugins/skill-guide/README.md) | Design, author, and validate reusable skills |
+| [Planning](plugins/planning/README.md) | Durable task journals, verified progress, and session recovery |
+
+See the [plugin catalog](docs/plugins.md) for details and the
+[usage guide](docs/usage.md) for commands and examples.
+
+### Claude Code
+
+Run inside Claude Code:
+
+```text
+/plugin marketplace add mehdihadeli/agent-toolkit
+/plugin install agent-toolkit-planning@agent-toolkit
 ```
 
-The Python installer copies complete skills and supporting assets, not hooks,
-agent profiles, or executable services. Make is optional; the Python CLI exposes
-the same operations. See [host installation](docs/harnesses.md) for native
-marketplace setup, project scope, updates, and safe uninstall.
+Choose another registered plugin for a different workflow. Planning hooks are
+optional and Claude-specific; see the [Planning README](plugins/planning/README.md)
+before enabling them.
 
-Preview the documentation website with `npm ci` and `npm run docs:dev`.
-See [Documentation Website](docs/website.md) for static builds and GitHub Pages deployment.
+### Codex CLI
 
-Install repository dependencies and run static validation:
+Run these commands in a terminal with a current Codex CLI:
+
+```bash
+codex plugin marketplace add mehdihadeli/agent-toolkit
+codex plugin add agent-toolkit-planning@agent-toolkit
+```
+
+The native Codex manifests expose canonical source skills through the committed
+`.agents/plugins/marketplace.json`; no generation step is required. This
+repository does not generate Codex TOML agents or command-derived skills.
+Installing a plugin does not start .NET agents or MCP servers. See
+[Codex setup details](docs/harnesses.md#codex-cli) for the native installation
+route and its boundaries.
+
+### Cursor
+
+Import `https://github.com/mehdihadeli/agent-toolkit` through Cursor's marketplace
+import flow, then install a plugin from Customize. Cursor reads the committed
+`.cursor-plugin/marketplace.json` and canonical skills.
+
+See [native marketplace setup](docs/harnesses.md#native-marketplaces) for
+host-specific requirements and local testing.
+
+### Skills only
+
+Install an individual skill with GitHub CLI's `gh skill` command or Vercel's
+`npx skills` installer. Select your coding tool when prompted. Both fetch
+skills from GitHub without requiring a local clone and install them without
+the plugin's agents, commands, or hooks.
+
+```bash
+gh skill install mehdihadeli/agent-toolkit durable-plans
+npx skills add mehdihadeli/agent-toolkit --skill durable-plans
+```
+
+`gh skill` requires GitHub CLI 2.90 or later. The `npx` command requires Node.js
+and npm. See [skills-only installers](docs/harnesses.md#skills-only-installers)
+for available skills, agent selection, install scopes, and version pinning.
+For owned installs from a local clone, the
+[Python installer](docs/harnesses.md#skills-only-installation) remains available.
+
+### Install from a clone
+
+For OpenCode, Antigravity CLI, and Copilot native artifacts, clone the repository
+and install the pinned Python adapter dependency:
+
+```bash
+git clone https://github.com/mehdihadeli/agent-toolkit.git
+cd agent-toolkit
+make deps
+```
+
+Choose the target for your host:
+
+```bash
+make install-native-opencode PLUGIN=planning DRY_RUN=1
+make install-native-opencode PLUGIN=planning
+# Alternatives: make install-native-antigravity or make install-native-copilot
+```
+
+Make is optional; equivalent Python commands are documented in
+[Host Harnesses](docs/harnesses.md). Antigravity filesystem staging may also
+require native plugin-manager registration. That guide covers project scope,
+updates, installation checks, and safe removal.
+
+## What's inside
+
+| Component | What it provides |
+| --- | --- |
+| Five plugins | Independent release boundaries with source, manifests, and usage documentation |
+| Skills | Markdown guidance, references, and scripts loaded for relevant tasks |
+| .NET MCP | Public web tools exposed over stdio or Streamable HTTP |
+| .NET agent | Standalone read-only quality analysis using the Copilot SDK |
+| Host adapters | Generated native formats for portable Markdown skills, agents, and commands |
+
+Browse [Plugins](docs/plugins.md), [Agents](docs/agents.md), and
+[Agent Skills](docs/agent-skills.md) for details.
+
+## How it works
+
+Hosts discover a plugin through its registry and manifests, then consume its
+registered surfaces. Installing one plugin does not load the entire repository
+into the agent's context.
+
+```text
+plugins/docs-research/
++-- .claude-plugin/plugin.json
++-- .codex-plugin/plugin.json
++-- .cursor-plugin/plugin.json
++-- README.md
+`-- skills/docs-research/
+    `-- SKILL.md                    # Reusable Markdown guidance
+```
+
+Native registries reference canonical source. Adapters generate ignored
+host-specific artifacts from portable Markdown surfaces. Commands may become
+skills, and model choices and tool permissions vary by host. Models inherit
+host defaults unless explicitly overridden.
+
+Skills and Markdown agents provide instructions. .NET agents run as standalone
+applications; MCP servers expose tools over stdio or Streamable HTTP when
+explicitly launched or configured in a host. External providers and credentials
+are configured through environment variables.
+
+Adapters do not convert .NET applications into Markdown agents or translate
+MCP configuration, secrets, or Claude hooks. MCP clients connect to servers
+that users explicitly host or configure.
+
+Source stays inside `plugins/<id>/`; tests and evaluations live under
+`tests/<id>/`. See [Architecture](docs/architecture.md) for ownership and runtime
+boundaries.
+
+## Quality evaluation
+
+Validation covers different kinds of behavior:
+
+- Repository checks validate manifests, marketplace alignment, links, and evaluation coverage.
+- Waza provides credential-free trigger coverage for skills and host-native agents.
+- Vally evaluates skill activation, prompt contracts, agent behavior, and MCP tool calls.
+- xUnit v3 unit and integration tests exercise executable .NET plugins.
+- Deterministic script and installer tests check skill tooling and host adapters.
+
+Install development dependencies and run static checks:
 
 ```bash
 mise install
@@ -34,271 +194,47 @@ mise run vally-lint
 mise run waza-eval
 ```
 
-Run all .NET tests:
+Check generated artifacts and run executable tests:
 
 ```bash
+make generate-all
+make garden
 dotnet test --solution agent-toolkit.slnx
+make test-harness
 ```
 
-Run the complete prompt-evaluation suite with GitHub Copilot:
+Run prompt evaluations through GitHub Copilot or the optional Claude executor:
 
 ```bash
 mise run vally-eval-copilot-local
-```
 
-Claude Code evaluations use the local Claude executor and require Claude authentication and provider configuration:
-
-```bash
 npm run build --prefix tools/vally-executor-claude
 mise run vally-eval-claude-local
 ```
 
-See [docs/usage.md](docs/usage.md), [docs/plugin-eval.md](docs/plugin-eval.md), and [docs/ci.md](docs/ci.md) for local and CI workflows.
+Prompt evaluations require host authentication and provider configuration.
+The Claude executor runs the same Vally suites through Claude Code.
+See [Plugin Evaluation](docs/plugin-eval.md), [Tests](tests/README.md), and
+[CI](docs/ci.md) for credentials, focused checks, and local equivalents.
 
-## What This Repository Provides
+## Documentation map
 
-| Surface        | Purpose                                                                      | Typical location                                 |
-| -------------- | ---------------------------------------------------------------------------- | ------------------------------------------------ |
-| .NET MCP       | Portable tools exposed through MCP, including Streamable HTTP or stdio hosts | `plugins/<id>/mcps/<name>/`                      |
-| .NET agent     | Standalone executable agent using a typed .NET runtime or SDK                | `plugins/<id>/agents/<name>/`                    |
-| Markdown agent | Host-native role, workflow, and safety instructions                          | `plugins/<id>/agents/<name>.md` or host metadata |
-| Skill          | Reusable Markdown guidance activated by intent                               | `plugins/<id>/skills/<name>/SKILL.md`            |
-| Command        | Short host command that forwards to a repeatable workflow                    | `plugins/<id>/commands/`                         |
+| Guide | Covers |
+| --- | --- |
+| [Plugin catalog](docs/plugins.md) | Plugins by task and their host registrations |
+| [Agents](docs/agents.md) and [skills](docs/agent-skills.md) | Components, conventions, and progressive disclosure |
+| [Usage](docs/usage.md) and [host setup](docs/harnesses.md) | Commands, installation routes, and capability limits |
+| [Architecture](docs/architecture.md) and [packaging](docs/packaging.md) | Source ownership, runtimes, adapters, and distribution |
+| [Evaluation](docs/plugin-eval.md) and [CLI verification](docs/round-trip-results.md) | Prompt checks, real-host recipes, and their limits |
+| [Tests](tests/README.md) and [CI](docs/ci.md) | Test layout, credentials, and local workflow equivalents |
+| [Documentation website](docs/website.md) | Local preview and GitHub Pages deployment |
 
-These surfaces are managed by plugins. Do not add parallel repository-level agents, skills, commands, or MCP implementations.
+Preview the documentation website with `npm ci` and `npm run docs:dev`.
 
-## Current Plugins
-
-| Plugin                                             | Surfaces   | Purpose                                                               |
-| -------------------------------------------------- | ---------- | --------------------------------------------------------------------- |
-| [Search](plugins/search/README.md)                 | .NET MCP   | Bounded public web retrieval and cited research                       |
-| [Dotnet Quality](plugins/dotnet-quality/README.md) | .NET agent | Read-only `dotnet format` quality analysis                            |
-| [Docs Research](plugins/docs-research/README.md)   | Skill      | Research official documentation and produce implementation checklists |
-| [Skill Guide](plugins/skill-guide/README.md)       | Skill      | Design, organize, author, and validate reusable skills                |
-| [Planning](plugins/planning/README.md)             | Skill + Node.js | Durable task journals, verified progress, and recovery across sessions |
-
-Plugin registrations are maintained in:
-
-- [Claude marketplace](.claude-plugin/marketplace.json)
-- [Codex marketplace](.agents/plugins/marketplace.json)
-- [Cursor marketplace](.cursor-plugin/marketplace.json)
-
-Each plugin is an independent release boundary with its own manifests and README. Plugin IDs and versions must remain aligned across all three marketplace registries.
-
-## Multi-Harness Support
-
-One canonical `plugins/` tree serves native marketplaces and local installation.
-Each host receives only the surfaces it supports; installing a plugin never
-starts a .NET application or MCP server automatically.
-
-| Harness | Registry or installed artifacts | Notes |
-| --- | --- | --- |
-| **Claude Code** | `.claude-plugin/marketplace.json` + `plugins/*/.claude-plugin/plugin.json` | Native plugin source; optional planning hooks remain Claude-specific. |
-| **Codex CLI** | `.agents/plugins/marketplace.json` + `plugins/*/.codex-plugin/plugin.json` | Native marketplace points to canonical plugins and skills. |
-| **Cursor** | `.cursor-plugin/marketplace.json` + `plugins/*/.cursor-plugin/plugin.json` | Thin manifests reference canonical skills; no translated source copies. |
-| **OpenCode** | `.opencode/{skills,agents,commands}/` (generated, ignored) | Native names and closed `permission` blocks; install under `~/.config/opencode/`. |
-| **Antigravity CLI** | `.antigravity/plugins/<id>/{plugin.json,skills,agents}` (generated, ignored) | Self-contained plugins; commands become manual skills; models inherit or use explicit `flash`/`pro` overrides. |
-| **GitHub Copilot** | `.copilot/{skills,agents}/` (generated, ignored) | Native `.agent.md` profiles, commands-as-skills; install under `~/.copilot/`. |
-
-```bash
-make deps                               # install pinned Python adapter dependency
-make generate-all                       # generate all three adapter projections
-make validate                           # validate native marketplace metadata
-make garden                             # metadata, links, output integrity, source drift
-make install-native-opencode DRY_RUN=1   # preview without changing host settings
-make install-native-opencode PLUGIN=planning
-make doctor-native HARNESS=opencode
-make uninstall-native-opencode PLUGIN=planning
-make test-harness                       # deterministic adapters and installer tests
-```
-
-Claude, Codex, and Cursor use committed registries rather than generated trees.
-The generator emits only existing plugin-owned Markdown surfaces; the current
-plugins primarily provide skills. It does not turn .NET applications into
-Markdown agents or copy the workspace-specific Copilot agent into other hosts.
-
-The dependency-free `make install-opencode`, `make install-copilot`, and other
-skills-only targets remain available, including Gemini CLI and Pi. Do not use
-both installation routes in the same scope: generated skill IDs are namespaced
-and can otherwise duplicate an existing bare-name skill. User scope and copy
-mode are defaults. Existing unrelated files and edited installs are refused.
-
-See [Host Harnesses](docs/harnesses.md) for setup, supported surfaces, and limits.
-
-## Supported Hosts And Tools
-
-This repository supports a small set of hosts and development tools. The
-plugin source remains shared, but each host consumes only the integration it
-supports. The skills-only installer copies canonical skill directories without
-generating translated agents or host-specific plugin trees.
-
-| Host or tool          | Integration                                                     | What it supports                                                                     |
-| --------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Claude Code           | `.claude-plugin/marketplace.json` and per-plugin `plugin.json`  | Plugin discovery, Markdown skills, Markdown agents, commands, and MCP connections    |
-| OpenAI Codex CLI      | `.agents/plugins/marketplace.json` and per-plugin `plugin.json` | Plugin discovery and Markdown skills or other Codex-supported plugin surfaces        |
-| GitHub Copilot        | Workspace instructions, Copilot CLI, and Copilot SDK            | Markdown guidance, Copilot-backed evaluations, and the standalone .NET quality agent |
-| Cursor                | `.cursor-plugin/marketplace.json` and per-plugin `plugin.json` | Native plugin discovery of canonical skills |
-| OpenCode, Antigravity CLI, Gemini CLI, Pi | Python skills installer | Canonical Markdown skills and their scripts, references, and assets |
-| MCP clients           | stdio or Streamable HTTP                                        | Connections to the .NET Search MCP and other MCP projects hosted by the user         |
-| Vally                 | Repository-local CLI and evaluation specs                       | Static plugin validation, skill activation, agent behavior, and MCP evaluations      |
-| Claude Vally executor | `tools/vally-executor-claude`                                   | Runs the same Vally evaluations through Claude Code                                  |
-| .NET SDK              | `global.json` and `agent-toolkit.slnx`                          | Build, run, unit-test, and integration-test executable .NET plugins                  |
-
-Host registries discover plugin metadata; they do not automatically start .NET
-agents or MCP servers. Run those projects explicitly or configure the host to
-launch the MCP transport. See [docs/harnesses.md](docs/harnesses.md) for host
-boundaries and [docs/usage.md](docs/usage.md) for local commands.
-
-## How Plugins Work
-
-Each plugin is an isolated, composable release boundary. A plugin can provide
-one or more host surfaces: Markdown agents, executable .NET agents, skills,
-commands, and .NET MCP projects. Hosts discover only the plugin metadata and
-surfaces registered for that host; installing or selecting a plugin does not
-turn the entire repository into one agent context.
-
-```text
-plugins/search/
-├── .claude-plugin/plugin.json       # Claude plugin metadata
-├── .codex-plugin/plugin.json        # Codex plugin metadata
-├── README.md                        # Plugin usage and validation
-├── mcps/search/                     # .NET MCP project
-└── shared/tavily/                   # Supporting .NET project
-
-plugins/docs-research/
-├── .claude-plugin/plugin.json
-├── .codex-plugin/plugin.json
-├── README.md
-└── skills/docs-research/
-  └── SKILL.md                     # Reusable Markdown skill
-```
-
-The plugin directory is the source of truth. Marketplace registries point to
-these directories, while tests and evaluations remain outside the plugin:
-
-```text
-plugin source        plugins/<plugin-id>/
-Claude registry      .claude-plugin/marketplace.json
-Codex registry       .agents/plugins/marketplace.json
-plugin tests         tests/<plugin-id>/
-```
-
-Discovery and execution are separate. Claude Code and Codex read marketplace
-and plugin metadata. Skills and Markdown agents provide instructions but do not
-start .NET processes. .NET agents run as standalone applications, and MCP
-projects run as stdio or Streamable HTTP services when a host launches them.
-
-## Architecture
-
-```text
-coding host
-  -> marketplace registry
-    -> plugin manifest
-      -> Markdown agent, skill, or command
-      -> .NET agent
-      -> .NET MCP
-        -> external tools or services
-```
-
-The repository separates discovery from execution:
-
-- Claude Code and Codex discover plugin metadata from their host-specific registries.
-- Skills and Markdown agents provide instructions; they do not start .NET processes automatically.
-- .NET agents run as standalone applications.
-- MCP projects expose portable capabilities over stdio or Streamable HTTP.
-- External providers and API credentials are configured through environment variables.
-
-The canonical plugin source is `plugins/<id>/`. Host metadata belongs in each plugin's `.claude-plugin/` and `.codex-plugin/` directories. Do not duplicate source under generated host trees.
-
-## Plugin Layout
-
-```text
-plugins/<plugin-id>/
-├── .claude-plugin/plugin.json
-├── .codex-plugin/plugin.json
-├── README.md
-├── agents/                  # Markdown or executable .NET agents
-├── commands/                # Host commands, when needed
-├── skills/<skill-name>/
-│   └── SKILL.md
-├── mcps/<mcp-name>/         # Executable MCP projects and metadata
-└── Directory.Packages.props # When the plugin owns package versions
-```
-
-Use the smallest surface that owns the behavior. Keep executable source and supporting assets inside the plugin. Register distributable plugins in both marketplace files and update plugin documentation when adding or renaming a plugin.
-
-For the detailed structure rules, see [AGENTS.md](AGENTS.md), [docs/architecture.md](docs/architecture.md), and [docs/authoring.md](docs/authoring.md).
-
-## Tests And Evaluations
-
-Tests mirror plugin ownership at repository root:
-
-```text
-tests/<plugin-id>/
-├── vally/                  # Skill, agent, and MCP prompt evaluations
-├── unit-tests/             # Fast isolated .NET tests
-└── integration-tests/      # Hosting, process, network, or provider tests
-```
-
-Use:
-
-- Vally evaluations for skill activation, agent behavior, tool calls, and prompt contracts.
-- xUnit v3 unit tests for deterministic .NET logic.
-- xUnit v3 integration tests for hosting, networking, MCP, SDK, or external boundaries.
-- Fixtures beside the evaluation or test that consumes them.
-
-Skill-only plugins normally use `tests/<plugin>/vally/` and do not need .NET test projects. Keep credentials out of YAML, fixtures, source, and workflow files.
-
-Run focused checks before broad validation:
-
-```bash
-python tools/validate_repository.py
-vally lint .
-dotnet test --solution agent-toolkit.slnx
-```
-
-Prompt evaluations require provider credentials. See [tests/README.md](tests/README.md) and [docs/plugin-eval.md](docs/plugin-eval.md) for executor, BYOK, and Claude configuration.
-
-Waza provides fast, credential-free trigger coverage for every skill and host-native
-agent. Run all suites with `mise run waza-eval`, or focus on one surface with
-`WAZA_SKILL=skill-guide mise run waza-eval`. Each covered surface requires two
-positive trigger tasks and one negative trigger task; repository validation checks
-that coverage before CI runs Waza.
-
-## Adding A Plugin
-
-1. Choose the smallest owning surface: MCP, .NET agent, Markdown agent, skill, or command.
-2. Create `plugins/<plugin-id>/` with the required manifests, README, and source surface.
-3. Add or update both marketplace registries with the same plugin ID and version.
-4. Add tests under `tests/<plugin-id>/`, using Vally, xUnit, or both as appropriate.
-5. Update relevant documentation and indexes.
-6. Run focused validation, then repository validation and the affected tests or evaluation.
-
-Do not commit generated `bin/`, `obj/`, or evaluation result output. Preserve read-only and bounded behavior for tools that access external systems.
-
-## Documentation Map
-
-Detail lives in `docs/`. Read in this order when adding or changing a plugin:
-
-- [AGENTS.md](AGENTS.md): repository map, plugin boundaries, tests, and quality gates
-- [docs/plugins.md](docs/plugins.md): plugin catalog and host registrations
-- [docs/architecture.md](docs/architecture.md): runtime, ownership, and execution boundaries
-- [docs/agents.md](docs/agents.md): Markdown and executable .NET agent conventions
-- [docs/agent-skills.md](docs/agent-skills.md): skill structure and progressive disclosure
-- [docs/authoring.md](docs/authoring.md): plugin, skill, command, agent, and MCP authoring workflow
-- [docs/harnesses.md](docs/harnesses.md): Claude, Codex, Copilot, and MCP host boundaries
-- [docs/usage.md](docs/usage.md): local commands and development workflows
-- [docs/plugin-eval.md](docs/plugin-eval.md): Vally linting and prompt evaluation
-- [docs/ci.md](docs/ci.md): GitHub Actions workflows, credentials, and local equivalents
-- [docs/packaging.md](docs/packaging.md): plugin packaging and distribution
-- [docs/round-trip-results.md](docs/round-trip-results.md): real-host discovery and verification recipes
-- [tests/README.md](tests/README.md): test layout, fixtures, and evaluator setup
-
-For contribution workflow, start with [CONTRIBUTING.md](CONTRIBUTING.md).
-Authoring rules are summarized in [docs/authoring.md](docs/authoring.md), and
-host-specific capability differences are documented in
-[docs/harnesses.md](docs/harnesses.md).
+Contributing: [CONTRIBUTING.md](CONTRIBUTING.md). Repository conventions and
+quality gates: [AGENTS.md](AGENTS.md). See [authoring conventions](docs/authoring.md)
+when adding plugin content.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
